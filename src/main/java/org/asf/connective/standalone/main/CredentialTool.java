@@ -3,6 +3,7 @@ package org.asf.connective.standalone.main;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Base64;
 
 public class CredentialTool {
@@ -102,7 +103,22 @@ public class CredentialTool {
 			} else {
 				System.out.print(username + "'s Password: ");
 				password = System.console().readPassword();
-				System.out.println();
+				System.out.print("Repeat "+username + "'s password: ");
+				char[] validatepassword = System.console().readPassword();
+				if (!Arrays.equals(password, validatepassword)) {
+					for (int i = 0; i < password.length; i++) {
+						validatepassword[i] = 0;
+					}
+					for (int i = 0; i < password.length; i++) {
+						password[i] = 0;
+					}
+					System.err.println("Passwords do not match.");
+					System.exit(-1);
+					return;
+				}
+				for (int i = 0; i < password.length; i++) {
+					validatepassword[i] = 0;
+				}
 			}
 			File credFolder = new File("credentials");
 			if (!credFolder.exists())
