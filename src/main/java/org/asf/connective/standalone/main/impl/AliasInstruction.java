@@ -85,7 +85,7 @@ public class AliasInstruction implements ContextFileInstruction {
 
 			});
 		} else {
-			throw new Exception("Invalid format! Expected either 'class:<class>' or 'test' location' 'matcher'");
+			throw new Exception("Invalid format! Expected either 'class:<class>' or 'test' 'location' 'matcher'");
 		}
 	}
 
