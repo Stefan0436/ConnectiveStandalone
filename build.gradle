@@ -12,7 +12,6 @@ apply plugin: 'eclipse'
 
 repositories {
     mavenCentral()
-    jcenter()
 	maven { name = "AerialWorks"; url = "https://aerialworks.ddns.net/maven" }
     flatDir {
        dirs 'libraries'
@@ -65,4 +64,50 @@ dependencies {
 	implementation group: 'org.asf.cyan', name: 'CyanUtil', version: '1.0.0.A4'
 	implementation group: 'org.asf.cyan', name: 'CCFG', version: '1.0.0.A7'
 	implementation group: 'org.asf.cyan', name: 'Fluid', version: '1.0.0.A15'
+	
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.0'
+	
+	implementation 'org.ow2.asm:asm:9.1'
+	implementation 'org.ow2.asm:asm-tree:9.1'
+	implementation 'org.ow2.asm:asm-commons:9.1'
+	
+	implementation group: 'javax.activation', name: 'activation', version: '1.1.1'
+	
+	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-UTIL', version: '0.0.0.11'
 }
+
+project.configurations.implementation.canBeResolved = true
+
+task installation () {
+	doLast {
+		copy {
+			from "connective"
+			into "build/Installations"
+		}
+		for (ResolvedArtifact arti : project.configurations.implementation.resolvedConfiguration.getResolvedArtifacts()) {
+			if (arti.getClassifier() != null)
+				continue;
+			copy {
+				from arti.file
+				rename arti.file.getName(), arti.name + (arti.getClassifier() != null && !arti.getClassifier().isEmpty() ? "-" + arti.getClassifier() : "") + "." + arti.getExtension()
+				into "build/Installations/libs"
+			}
+		}
+		for (def task : project.tasks) {
+			if (task instanceof AbstractArchiveTask) {
+				if (!task.getArchiveClassifier().get().isEmpty())
+					continue;
+					
+				copy {
+					from task.getArchiveFile().get()
+					rename task.getArchiveFile().get().getAsFile().getName(), task.getArchiveBaseName().get() + (task.getArchiveClassifier().get() != null && !task.getArchiveClassifier().get().isEmpty() ? "-" + task.getArchiveClassifier().get() : "") + "." + task.getArchiveExtension().get()
+					into "build/Installations"
+				}
+			}
+		}
+	}
+}
+
+installation.dependsOn project.tasks.build
+build.finalizedBy installation
