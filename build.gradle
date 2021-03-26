@@ -83,6 +83,7 @@ task installation () {
 	doLast {
 		copy {
 			from "connective"
+			from "connective.bat"
 			into "build/Installations"
 		}
 		for (ResolvedArtifact arti : project.configurations.implementation.resolvedConfiguration.getResolvedArtifacts()) {

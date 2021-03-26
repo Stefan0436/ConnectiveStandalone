@@ -12,6 +12,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.zip.ZipInputStream;
 
 import org.asf.aos.util.service.extra.slib.util.ArrayUtil;
@@ -20,6 +21,7 @@ import org.asf.connective.standalone.main.impl.AliasInstruction;
 import org.asf.connective.standalone.main.impl.DefaultIndexPageInstruction;
 import org.asf.connective.standalone.main.impl.ExtensionInstruction;
 import org.asf.connective.standalone.main.impl.IndexPageInstruction;
+import org.asf.connective.standalone.main.impl.PostHandlerInstruction;
 import org.asf.connective.standalone.main.impl.RestrictionInstruction;
 import org.asf.connective.standalone.main.impl.VirtualRootInstruction;
 import org.asf.cyan.api.common.CYAN_COMPONENT;
@@ -53,7 +55,7 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 	private static Class<?>[] defaultClasses = new Class[] { ConnectiveHTTPServer.class, ConnectiveStandalone.class,
 			BasicFileModule.class, VirtualRootInstruction.class, DefaultIndexPageInstruction.class,
 			IndexPageInstruction.class, RestrictionInstruction.class, ExtensionInstruction.class,
-			AliasInstruction.class };
+			AliasInstruction.class, PostHandlerInstruction.class };
 
 	private static FluidClassPool modulePool = FluidClassPool.createEmpty();
 	private static ArrayList<ContextFileInstruction> instructions;
@@ -69,6 +71,11 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 	 * @throws IllegalStateException If loading fails
 	 */
 	public static void main(String[] args) throws IllegalStateException, IOException {
+		if (args.length != 0 && args[0].equals("credtool")) {
+			CredentialTool.main(Arrays.copyOfRange(args, 1, args.length));
+			return;
+		}		
+		
 		if (System.getProperty("ideMode") != null) {
 			System.setProperty("log4j2.configurationFile",
 					ConnectiveStandalone.class.getResource("/log4j2-ide.xml").toString());

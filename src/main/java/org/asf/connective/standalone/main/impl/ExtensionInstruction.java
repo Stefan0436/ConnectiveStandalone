@@ -31,7 +31,7 @@ public class ExtensionInstruction implements ContextFileInstruction {
 									ConnectiveStandalone.getInstance().getClassLoader())
 							.getConstructor().newInstance());
 		} else {
-			throw new IOException("Invalid index page! Expected: 'class:<extension>'");
+			throw new IOException("Invalid extension! Expected: 'class:<extension>'");
 		}
 	}
 
