@@ -106,7 +106,7 @@ public class CredentialTool {
 				System.out.print("Repeat "+username + "'s password: ");
 				char[] validatepassword = System.console().readPassword();
 				if (!Arrays.equals(password, validatepassword)) {
-					for (int i = 0; i < password.length; i++) {
+					for (int i = 0; i < validatepassword.length; i++) {
 						validatepassword[i] = 0;
 					}
 					for (int i = 0; i < password.length; i++) {
@@ -116,7 +116,7 @@ public class CredentialTool {
 					System.exit(-1);
 					return;
 				}
-				for (int i = 0; i < password.length; i++) {
+				for (int i = 0; i < validatepassword.length; i++) {
 					validatepassword[i] = 0;
 				}
 			}
