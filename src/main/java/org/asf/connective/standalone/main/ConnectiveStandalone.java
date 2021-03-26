@@ -14,6 +14,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.zip.ZipInputStream;
 
+import org.asf.aos.util.service.extra.slib.util.ArrayUtil;
 import org.asf.connective.standalone.ContextFileInstruction;
 import org.asf.connective.standalone.main.impl.AliasInstruction;
 import org.asf.connective.standalone.main.impl.DefaultIndexPageInstruction;
@@ -74,6 +75,16 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 		} else {
 			System.setProperty("log4j2.configurationFile",
 					ConnectiveStandalone.class.getResource("/log4j2.xml").toString());
+		}
+
+		if (System.getProperty("addCpModules") != null) {
+			for (String mod : System.getProperty("addCpModules").split(":")) {
+				try {
+					defaultClasses = ArrayUtil.append(defaultClasses, new Class[] { Class.forName(mod) });
+				} catch (ClassNotFoundException e) {
+					throw new RuntimeException(e);
+				}
+			}
 		}
 
 		ConnectiveStandalone.initializeComponents();
