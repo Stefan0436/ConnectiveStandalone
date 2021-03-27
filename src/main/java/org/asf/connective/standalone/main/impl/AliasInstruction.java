@@ -30,8 +30,8 @@ public class AliasInstruction implements ContextFileInstruction {
 	@Override
 	public void run(String[] arguments, ProviderContextFactory factory) throws Exception {
 		if (arguments[0].startsWith("class:")) {
-			factory.addRestriction(
-					(IFileRestrictionProvider) Class
+			factory.addAlias(
+					(IFileAlias) Class
 							.forName(arguments[0].substring("class:".length()), false,
 									ConnectiveStandalone.getInstance().getClassLoader())
 							.getConstructor().newInstance());

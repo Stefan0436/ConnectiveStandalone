@@ -31,7 +31,7 @@ public class IndexPageInstruction implements ContextFileInstruction {
 									ConnectiveStandalone.getInstance().getClassLoader())
 							.getConstructor().newInstance());
 		} else {
-			throw new IOException("Invalid index page! Expected 'class:<index-page-class>'");
+			throw new IOException("Invalid index page! Expected '<path>' 'class:<index-page-class>'");
 		}
 	}
 
