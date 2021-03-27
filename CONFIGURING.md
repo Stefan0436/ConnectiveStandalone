@@ -15,26 +15,26 @@ Each (virtual) folder is created by using the following statements:
 # Format: context-root> 'contextfile'
 context> {
 
-	# Default entry
-	root> '
-	
-	# The following instruction assigns the '/' server folder as the virtual root.
-	# Requests to, say, http://localhost:8080/ are directed here
+    # Default entry
+    root> '
+    
+    # The following instruction assigns the '/' server folder as the virtual root.
+    # Requests to, say, http://localhost:8080/ are directed here
     virtualroot "/"
     
     '
 
-	# Custom entry
-	[real folder path]> '	
-	
-	# All ContextFiles are simple sets of instructions
-	virtualroot [virtual folder name or path]
-	
-	# Insert more instructions here, the following line disables index pages
-	# defaultindexpage null	
-	
-	'	
-	
+    # Custom entry
+    [real folder path]> '    
+    
+    # All ContextFiles are simple sets of instructions
+    virtualroot "[virtual folder name or path]"
+    
+    # Insert more instructions here, the following line disables index pages
+    # defaultindexpage null    
+
+    '    
+    
 }
 ```
 
@@ -54,7 +54,7 @@ You can create a `mime.types` file in the server root and configure it as follow
 # The format goes as follows: [mime path] <tab> [extension] <tab> [optionally more]
 # Example: "application/yaml   yml   yaml", another example: "application/json   json"
 
-mime/type	extension	another
+mime/type    extension    another
 ```
 
 By default, XML, JSON and YAML are already added.<br/>
@@ -63,4 +63,48 @@ The server also reads from `.mime.types` in the user home directory.
 <br />
 
 # Server modules
+ConnectiveHTTP is modular, it supports both core and normal modules, if written correctly, they
+can also run on the RaTs! build-in http server.
 
+#### Installing modules
+If you haven't run the server before, start it at least once. <br />
+After which, you will have a `modules` directory, simple drop the module in it and restart the server.
+
+#### Installing coremodules
+If you haven't run the server before, start it at least once. <br />
+After which, you will have a `coremodules` directory, simple drop the module in it and restart the server, please know that coremodules might be incompatible with one another.
+
+
+#### Module configuration
+The standard we (AerialWorks) provide is that modules use the HTTP server configuration,
+if written correctly, the module properties should appear in the `modules` block of server.ccfg.
+
+#### File extensions from modules
+To use module extensions (such as php), <b>you will need to refer to the module webpage</b> to find out which `ExtensionProvider` type name they use. Once you have it, add the following entries:
+
+```
+# File: server.ccfg
+#
+# HTTP Context Configuration, already exists.
+# Format: context-root> 'contextfile'
+context> {
+
+    # Default entry, just an example, you can use any of your own contexts
+    root> '
+    
+    # ...
+   
+    # The following line matters, replace [extension-class] with the ExtensionProvider type name.
+    extension class:[extension-class]
+    
+    # Example: PHP Support Module (needs to be installed)
+    # extension class:org.asf.connective.php.PHPExtensionProvider
+    
+    # ...
+    
+    '
+}
+```
+
+#### Module developer's guide
+Refer to [MODULEDEV.md](MODULEDEV.md) for the full list of tips for module development.
