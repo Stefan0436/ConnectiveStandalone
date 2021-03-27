@@ -3,6 +3,8 @@ package org.asf.connective.standalone.main;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.Base64;
 
@@ -131,13 +133,7 @@ public class CredentialTool {
 
 			try {
 				Files.write(userCred.toPath(), Base64.getEncoder().encode(String.valueOf(password).getBytes()));
-				userCred.setReadable(false, false);
-				userCred.setWritable(false, false);
-				userCred.setExecutable(false, false);
-				
-				userCred.setReadable(true, true);
-				userCred.setWritable(true, true);		
-				
+
 				for (int i = 0; i < password.length; i++) {
 					password[i] = 0;
 				}
