@@ -43,9 +43,6 @@ public class AliasInstruction implements ContextFileInstruction {
 					if (input.endsWith("/"))
 						input = input.substring(0, input.length() - 1);
 
-					if (!input.startsWith("/"))
-						input = "/" + input;
-
 					matchTest = matchTest.replace("%input%", input);
 					matchTest = matchTest.replace("%request.http.version%", request.version);
 					matchTest = matchTest.replace("%request.http.method%", request.method);

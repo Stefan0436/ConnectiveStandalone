@@ -43,9 +43,6 @@ public class RestrictionInstruction implements ContextFileInstruction {
 					if (file.endsWith("/"))
 						file = file.substring(0, file.length() - 1);
 
-					if (!file.startsWith("/"))
-						file = "/" + file;
-
 					matchTest = matchTest.replace("%file%", file);
 					matchTest = matchTest.replace("%request.http.version%", request.version);
 					matchTest = matchTest.replace("%request.http.method%", request.method);

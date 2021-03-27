@@ -55,8 +55,6 @@ public class PostHandlerInstruction implements ContextFileInstruction {
 
 		@Override
 		public boolean match(HttpRequest request, String path) {
-			if (!path.startsWith("/"))
-				path = "/" + path;
 			if (!path.endsWith("/"))
 				path += "/";
 
