@@ -6,7 +6,7 @@ plugins {
 version = "1.0.0.A1"
 group = "org.asf.connective"
 
-def authorname = "AerialWorks Software Development"
+def authorname = "AerialWorks Software Foundation"
 
 apply plugin: 'eclipse'
 
@@ -62,7 +62,7 @@ dependencies {
 	
 	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A4'
 	implementation group: 'org.asf.cyan', name: 'CyanUtil', version: '1.0.0.A4'
-	implementation group: 'org.asf.cyan', name: 'CCFG', version: '1.0.0.A7'
+	implementation group: 'org.asf.cyan', name: 'CCFG', version: '1.0.0.A8'
 	implementation group: 'org.asf.cyan', name: 'Fluid', version: '1.0.0.A15'
 	
 	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'

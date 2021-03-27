@@ -8,7 +8,6 @@ import org.asf.connective.standalone.main.ConnectiveStandalone;
 import org.asf.rats.HttpRequest;
 import org.asf.rats.http.ProviderContextFactory;
 import org.asf.rats.http.providers.IFileAlias;
-import org.asf.rats.http.providers.IFileRestrictionProvider;
 
 public class AliasInstruction implements ContextFileInstruction {
 
