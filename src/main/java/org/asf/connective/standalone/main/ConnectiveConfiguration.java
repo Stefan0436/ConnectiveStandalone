@@ -8,7 +8,11 @@ import org.asf.rats.ModuleBasedConfiguration;
 
 /**
  * 
- * @author stefan
+ * Connective Standalone Configuration, access as ModuleBasedConfiguration from
+ * the 'memory.modules.shared.config' {@link org.asf.rats.Memory Memory} entry,
+ * <b>avoid direct usage</b>.
+ * 
+ * @author Stefan0436 - AerialWorks Software Foundation
  *
  */
 @Comment("WARNING!")
@@ -48,4 +52,7 @@ public class ConnectiveConfiguration extends ModuleBasedConfiguration<Connective
 	@Comment("HTTP Context Configuration")
 	@Comment("Format: context-root> 'contextfile'")
 	public HashMap<String, String> context = new HashMap<String, String>(Map.of("root", "\n\nvirtualroot \"/\"\n\n"));
+
+	@Comment("Normal get/post processors, specify module classes here.")
+	public String processors = "\n";
 }

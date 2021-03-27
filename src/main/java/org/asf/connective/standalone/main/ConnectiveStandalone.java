@@ -11,8 +11,10 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.zip.ZipInputStream;
 
 import org.asf.aos.util.service.extra.slib.util.ArrayUtil;
@@ -35,6 +37,8 @@ import org.asf.rats.Memory;
 import org.asf.rats.http.BasicFileModule;
 import org.asf.rats.http.FileProcessorContextFactory;
 import org.asf.rats.http.ProviderContextFactory;
+import org.asf.rats.processors.HttpGetProcessor;
+import org.asf.rats.processors.HttpPostProcessor;
 import org.objectweb.asm.tree.ClassNode;
 
 /**
@@ -74,8 +78,8 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 		if (args.length != 0 && args[0].equals("credtool")) {
 			CredentialTool.main(Arrays.copyOfRange(args, 1, args.length));
 			return;
-		}		
-		
+		}
+
 		if (System.getProperty("ideMode") != null) {
 			System.setProperty("log4j2.configurationFile",
 					ConnectiveStandalone.class.getResource("/log4j2-ide.xml").toString());
@@ -157,6 +161,94 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 
 		modulePool.addSource(new LoaderClassSourceProvider(ClassLoader.getSystemClassLoader()));
 		modulePool.addSource(new LoaderClassSourceProvider(Thread.currentThread().getContextClassLoader()));
+
+		if (System.getProperty("debugCoremodules") != null && System.getProperty("debugCredentials") != null) {
+
+			String cred = System.getProperty("debugCredentials");
+			try {
+				cred = new String(Base64.getDecoder().decode(cred));
+			} catch (Exception ex) {
+				fatal("Failed to load CredString from command line! Unable to load!");
+				fatal("");
+				fatal("Please specify -DdebugCredentials=\"CredString\" to load coremodules from the command line.");
+				fatal("The 'CredString' is the base64-encoded value of 'username:password' which needs to be specified that way.");
+				fatal("The 'debug' credential group is used for this, use the 'credtool' program argument for more information.");
+				System.exit(-1);
+				return;
+			}
+			if (cred.contains(":")) {
+				String username = cred.substring(0, cred.indexOf(":"));
+				String password = cred.substring(cred.indexOf(":") + 1);
+
+				if (!username.matches("^[A-Za-z0-9@.]+$")) {
+					fatal("Failed to load CredString from command line! Unable to load!");
+					fatal("ERROR: Username not alphanumeric. (note: the '@' and '.' are also allowed)");
+					fatal("");
+					fatal("Please specify -DdebugCredentials=\"CredString\" to load coremodules from the command line.");
+					fatal("The 'CredString' is the base64-encoded value of 'username:password' which needs to be specified that way.");
+					fatal("The 'debug' credential group is used for this, use the 'credtool' program argument for more information.");
+					System.exit(-1);
+					password = null;
+					return;
+				}
+
+				boolean invalid = false;
+				File userFile = new File("credentials", "gr.debug." + username + ".cred");
+				if (!userFile.exists()) {
+					invalid = true;
+				} else {
+					try {
+						String userPass = new String(Base64.getDecoder().decode(Files.readAllBytes(userFile.toPath())));
+						if (!userPass.equals(password))
+							invalid = true;
+
+						userPass = null;
+					} catch (Exception e) {
+						invalid = true;
+					}
+				}
+				password = null;
+
+				if (invalid) {
+					fatal("Failed to load CredString from command line! Unable to load!");
+					fatal("ERROR: Username or password incorrect!");
+					fatal("");
+					fatal("Please specify -DdebugCredentials=\"CredString\" to load coremodules from the command line.");
+					fatal("The 'CredString' is the base64-encoded value of 'username:password' which needs to be specified that way.");
+					fatal("The 'debug' credential group is used for this, use the 'credtool' program argument for more information.");
+					System.exit(-1);
+					return;
+				}
+
+				for (String mod : System.getProperty("debugCoremodules").split(":")) {
+					try {
+						modulePool.getClassNode(mod);
+					} catch (ClassNotFoundException e) {
+						error("Failed to import coremodule class: " + mod, e);
+					}
+				}
+			} else {
+				fatal("CredString syntax invalid!");
+				fatal("Expected: username:password");
+				fatal("");
+				fatal("Please specify -DdebugCredentials=\"CredString\" to load coremodules from the command line.");
+				fatal("The 'CredString' is the base64-encoded value of 'username:password' which needs to be specified that way.");
+				fatal("The 'debug' credential group is used for this, use the 'credtool' program argument for more information.");
+				System.exit(-1);
+				return;
+			}
+		} else if (System.getProperty("debugCoremodules") != null) {
+			fatal("");
+			fatal("");
+			fatal("The argument debugCoremodules was specified without debugCredentials, cannot load!");
+			fatal("To secure the coremodule system, you will need to supply valid credentials to debug coremodules!");
+			fatal("");
+			fatal("Please specify -DdebugCredentials=\"CredString\" to load coremodules from the command line.");
+			fatal("The 'CredString' is the base64-encoded value of 'username:password' which needs to be specified that way.");
+			fatal("The 'debug' credential group is used for this, use the 'credtool' program argument for more information.");
+			System.exit(-1);
+			return;
+		}
 
 		for (String path : Splitter.split(System.getProperty("java.class.path"), ':')) {
 			if (path.equals("."))
@@ -298,6 +390,28 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 
 			@Override
 			public void run() {
+				info("Loading processors...");
+				for (String line : ConnectiveConfiguration.getInstance().processors.replaceAll("\r", "").split("\n")) {
+					if (line.isEmpty() || line.startsWith("#"))
+						continue;
+
+					info("Registering processor: " + line);
+					try {
+						@SuppressWarnings("unchecked")
+						Class<? extends HttpGetProcessor> cls = (Class<? extends HttpGetProcessor>) Class.forName(line,
+								false, moduleLoader);
+
+						HttpGetProcessor proc = cls.getConstructor().newInstance();
+						if (proc instanceof HttpPostProcessor) {
+							ConnectiveHTTPServer.getMainServer().registerProcessor((HttpPostProcessor) proc);
+						} else {
+							ConnectiveHTTPServer.getMainServer().registerProcessor(proc);
+						}
+					} catch (Exception e) {
+						error("Could not register processor " + line, e);
+					}
+				}
+
 				info("Server is running.");
 				ConnectiveHTTPServer.getMainServer().waitExit();
 			}

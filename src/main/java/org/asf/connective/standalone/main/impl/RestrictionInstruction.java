@@ -66,7 +66,7 @@ public class RestrictionInstruction implements ContextFileInstruction {
 							not = true;
 						}
 
-						Pattern pattern = Pattern.compile(matcher);
+						Pattern pattern = Pattern.compile(matcher, Pattern.CASE_INSENSITIVE);
 						Matcher matcherInst = pattern.matcher(matchTest);
 						boolean b = matcherInst.find();
 						match = (!not ? !b : b);

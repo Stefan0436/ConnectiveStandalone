@@ -103,7 +103,7 @@ public class CredentialTool {
 			} else {
 				System.out.print(username + "'s Password: ");
 				password = System.console().readPassword();
-				System.out.print("Repeat "+username + "'s password: ");
+				System.out.print("Repeat " + username + "'s password: ");
 				char[] validatepassword = System.console().readPassword();
 				if (!Arrays.equals(password, validatepassword)) {
 					for (int i = 0; i < validatepassword.length; i++) {
@@ -131,6 +131,13 @@ public class CredentialTool {
 
 			try {
 				Files.write(userCred.toPath(), Base64.getEncoder().encode(String.valueOf(password).getBytes()));
+				userCred.setReadable(false, false);
+				userCred.setWritable(false, false);
+				userCred.setExecutable(false, false);
+				
+				userCred.setReadable(true, true);
+				userCred.setWritable(true, true);		
+				
 				for (int i = 0; i < password.length; i++) {
 					password[i] = 0;
 				}
