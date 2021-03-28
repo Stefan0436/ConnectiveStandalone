@@ -3,7 +3,9 @@ package org.asf.connective.standalone.main;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -15,10 +17,12 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 
-import org.asf.aos.util.service.extra.slib.util.ArrayUtil;
 import org.asf.connective.standalone.ContextFileInstruction;
+import org.asf.connective.standalone.IMavenRepositoryProvider;
+import org.asf.connective.standalone.IModuleMavenDependencyProvider;
 import org.asf.connective.standalone.main.impl.AliasInstruction;
 import org.asf.connective.standalone.main.impl.DefaultIndexPageInstruction;
 import org.asf.connective.standalone.main.impl.ExtensionInstruction;
@@ -27,7 +31,10 @@ import org.asf.connective.standalone.main.impl.UploadHandlerInstruction;
 import org.asf.connective.standalone.main.impl.RestrictionInstruction;
 import org.asf.connective.standalone.main.impl.VirtualFileInstruction;
 import org.asf.connective.standalone.main.impl.VirtualRootInstruction;
+import org.asf.connective.standalone.main.impl.internal.AerialWorksMavenProvider;
 import org.asf.connective.standalone.main.impl.internal.ConnectiveAuthProvider;
+import org.asf.connective.standalone.main.impl.internal.MavenCentralRepositoryProvider;
+
 import org.asf.cyan.api.common.CYAN_COMPONENT;
 import org.asf.cyan.api.config.serializing.internal.Splitter;
 import org.asf.cyan.fluid.Transformer.AnnotationInfo;
@@ -61,7 +68,8 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 	private static Class<?>[] defaultClasses = new Class[] { ConnectiveHTTPServer.class, ConnectiveStandalone.class,
 			BasicFileModule.class, VirtualRootInstruction.class, DefaultIndexPageInstruction.class,
 			IndexPageInstruction.class, RestrictionInstruction.class, ExtensionInstruction.class,
-			AliasInstruction.class, UploadHandlerInstruction.class, VirtualFileInstruction.class };
+			AliasInstruction.class, UploadHandlerInstruction.class, VirtualFileInstruction.class,
+			AerialWorksMavenProvider.class, MavenCentralRepositoryProvider.class };
 
 	private static FluidClassPool modulePool = FluidClassPool.createEmpty();
 	private static ArrayList<ContextFileInstruction> instructions;
@@ -88,16 +96,6 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 		} else {
 			System.setProperty("log4j2.configurationFile",
 					ConnectiveStandalone.class.getResource("/log4j2.xml").toString());
-		}
-
-		if (System.getProperty("addCpModules") != null) {
-			for (String mod : System.getProperty("addCpModules").split(":")) {
-				try {
-					defaultClasses = ArrayUtil.append(defaultClasses, new Class[] { Class.forName(mod) });
-				} catch (ClassNotFoundException e) {
-					throw new RuntimeException(e);
-				}
-			}
 		}
 
 		ConnectiveStandalone.initializeComponents();
@@ -268,10 +266,40 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 		for (Class<?> cls : defaultClasses) {
 			try {
 				modulePool.getClassNode(cls.getTypeName());
+				sources.add(cls.getProtectionDomain().getCodeSource().getLocation());
 			} catch (ClassNotFoundException e) {
 				error("Failed to import class: " + cls.getTypeName(), e);
 			}
 		}
+
+		moduleLoader = new URLClassLoader(sources.toArray(t -> new URL[t]),
+				ConnectiveStandalone.class.getClassLoader());
+
+		if (System.getProperty("addCpModules") != null) {
+			for (String mod : System.getProperty("addCpModules").split(":")) {
+				try {
+					Class<?> cls = moduleLoader.loadClass(mod);
+					modulePool.addSource(cls.getProtectionDomain().getCodeSource().getLocation());
+					modulePool.getClassNode(cls.getTypeName());
+				} catch (ClassNotFoundException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}
+
+		IMavenRepositoryProvider[] repositories = Stream.of(findClasses(IMavenRepositoryProvider.class)).map((t) -> {
+
+			try {
+				return t.getConstructor().newInstance();
+			} catch (Exception ex) {
+				throw new RuntimeException(ex);
+			}
+
+		}).sorted((t1, t2) -> {
+
+			return Integer.compare(t1.priority(), t2.priority());
+
+		}).toArray(t -> new IMavenRepositoryProvider[t]);
 
 		for (File jar : modules.listFiles((arg0) -> {
 			return !arg0.isDirectory();
@@ -281,6 +309,9 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 			strm.close();
 			sources.add(jar.toURI().toURL());
 		}
+
+		moduleLoader = new URLClassLoader(sources.toArray(t -> new URL[t]),
+				ConnectiveStandalone.class.getClassLoader());
 
 		Class<?> cts = CyanTransformer.class;
 		try {
@@ -292,9 +323,135 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 			error("Failed to initialize component, class name: " + cts.getSimpleName(), e);
 		}
 
-		moduleLoader = new URLClassLoader(sources.toArray(t -> new URL[t]),
-				ConnectiveStandalone.class.getClassLoader());
+		ArrayList<IModuleMavenDependencyProvider> dependencies = new ArrayList<IModuleMavenDependencyProvider>();
+		Stream.of(findClasses(IModuleMavenDependencyProvider.class)).map((t) -> {
+			try {
+				return t.getConstructor().newInstance();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}).forEach((t) -> {
+			dependencies.add(t);
+		});
+
+		for (IModuleMavenDependencyProvider dependency : new ArrayList<IModuleMavenDependencyProvider>(dependencies)) {
+
+			String version = dependency.version();
+			for (IModuleMavenDependencyProvider dependency2 : new ArrayList<IModuleMavenDependencyProvider>(
+					dependencies)) {
+				if (dependency.group().equals(dependency2.group()) && dependency.name().equals(dependency2.name())) {
+					String newversion = dependency2.version();
+					if (!version.equals(newversion)) {
+						if (checkVersionGreaterThan(newversion, version)) {
+							dependencies.remove(dependency);
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		boolean reload = false;
+		for (IModuleMavenDependencyProvider dependency : dependencies) {
+			String file = dependency.name() + (dependency.version().isEmpty() ? "" : "-" + dependency.version())
+					+ (dependency.classifier() != null ? "-" + dependency.classifier() : "") + dependency.extension();
+
+			File moduleLibraries = new File("libs");
+			if (!moduleLibraries.exists())
+				moduleLibraries.mkdirs();
+
+			File libFile = new File(moduleLibraries,
+					(dependency.group().isEmpty() ? "" : dependency.group() + ".") + dependency.name()
+							+ (dependency.classifier() != null ? "-" + dependency.classifier() : "")
+							+ dependency.extension());
+
+			if (!libFile.exists()) {
+				for (IMavenRepositoryProvider repository : repositories) {
+					info("Trying to download dependency " + dependency.name() + " with version: " + dependency.version()
+							+ " from " + repository.serverBaseURL() + "...");
+
+					URL url = new URL(repository.serverBaseURL() + "/" + dependency.group().replace(".", "/") + "/"
+							+ dependency.name() + "/" + dependency.version() + "/" + file);
+
+					InputStream strm = null;
+					try {
+						strm = url.openStream();
+					} catch (IOException ex) {
+						continue;
+					}
+
+					FileOutputStream output = new FileOutputStream(libFile);
+					strm.transferTo(output);
+					strm.close();
+					output.close();
+					reload = true;
+					break;
+				}
+				if (!libFile.exists()) {
+					throw new IOException("Unable to find dependency " + dependency.group() + ":" + dependency.name()
+							+ ":" + dependency.version() + " in any known repository!");
+				}
+			}
+
+			ZipInputStream strm = new ZipInputStream(new FileInputStream(libFile));
+			FluidClassPool pl = FluidClassPool.create();
+			pl.importArchive(strm);
+			strm.close();
+			pl.close();
+
+		}
+
+		if (reload) {
+			info("");
+			info("Please restart the server, one or more module dependencies have been installed.");
+			System.exit(0);
+		}
+
 		impl.initializeComponentClasses();
+	}
+
+	private static boolean checkVersionGreaterThan(String newversion, String version) {
+		newversion = convertVerToVCheckString(newversion.replace("-", ".").replaceAll("[^0-9A-Za-z.]", ""));
+		String oldver = convertVerToVCheckString(version.replace("-", ".").replaceAll("[^0-9A-Za-z.]", ""));
+
+		int ind = 0;
+		String[] old = oldver.split("\\.");
+		for (String vn : newversion.split("\\.")) {
+			if (ind < old.length) {
+				String vnold = old[ind];
+				if (Integer.valueOf(vn) > Integer.valueOf(vnold)) {
+					return true;
+				} else if (Integer.valueOf(vn) < Integer.valueOf(vnold)) {
+					return false;
+				}
+				ind++;
+			} else
+				return false;
+		}
+
+		return false;
+	}
+
+	private static String convertVerToVCheckString(String version) {
+		char[] ver = version.toCharArray();
+		version = "";
+		boolean lastWasAlpha = false;
+		for (char ch : ver) {
+			if (ch == '.') {
+				version += ".";
+			} else {
+				if (Character.isAlphabetic(ch) && !lastWasAlpha && !version.endsWith(".")) {
+					version += ".";
+					lastWasAlpha = true;
+				} else if (lastWasAlpha && !version.endsWith(".")) {
+					version += ".";
+					lastWasAlpha = false;
+				} else {
+					version += Integer.toString((int) ch);
+				}
+			}
+		}
+		return version;
 	}
 
 	/**
@@ -334,7 +491,7 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 			}
 
 			for (String line : contextFile.replaceAll("\r", "").split("\n")) {
-				if (line.isEmpty() || line.startsWith("#"))
+				if (line.isBlank() || line.startsWith("#"))
 					continue;
 
 				ArrayList<String> arguments = parseCommand(line);
@@ -401,8 +558,8 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 					info("Registering processor: " + line);
 					try {
 						@SuppressWarnings("unchecked")
-						Class<? extends HttpGetProcessor> cls = (Class<? extends HttpGetProcessor>) Class.forName(line,
-								false, moduleLoader);
+						Class<? extends HttpGetProcessor> cls = (Class<? extends HttpGetProcessor>) moduleLoader
+								.loadClass(line);
 
 						HttpGetProcessor proc = cls.getConstructor().newInstance();
 						if (proc instanceof HttpUploadProcessor) {
