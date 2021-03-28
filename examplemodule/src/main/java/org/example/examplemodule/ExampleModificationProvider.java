@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.asf.rats.http.IAutoContextModificationProvider;
 import org.asf.rats.http.ProviderContextFactory;
 
-// This class provides allows RaTs! to use the module components, it allows
+// This class allows RaTs! to use the module components, it allows
 // for modifying any context created by the IAutoContextBuilders used by RaTs.
 public class ExampleModificationProvider implements IAutoContextModificationProvider {
 
