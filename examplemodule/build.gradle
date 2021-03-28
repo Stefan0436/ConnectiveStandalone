@@ -107,7 +107,7 @@ dependencies {
 }
 
 createEclipseLaunches {
-	name "Launch ConnectiveStandalone Server"
+	name "Launch ConnectiveStandalone Server (${project.name})"
 
 	// Main server
 	mainClass "org.asf.connective.standalone.main.ConnectiveStandalone"

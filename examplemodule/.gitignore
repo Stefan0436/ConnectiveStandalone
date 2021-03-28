@@ -10,4 +10,4 @@ bin/
 
 # Run files
 server/
-Launch ConnectiveStandalone Server.launch
+Launch ConnectiveStandalone Server**.launch
