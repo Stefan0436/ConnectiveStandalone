@@ -84,6 +84,7 @@ public class UploadHandlerInstruction implements ContextFileInstruction {
 							password = null;
 
 							File file = new File(new File(serverDir, context.getSourceDirectory()), path);
+							boolean existed = file.exists();
 							if (!file.getParentFile().exists()) {
 								file.getParentFile().mkdirs();
 							}
@@ -92,9 +93,15 @@ public class UploadHandlerInstruction implements ContextFileInstruction {
 							getRequest().transferRequestBody(strm);
 							strm.close();
 
-							this.setResponseCode(204);
-							this.setResponseMessage("No content");
-							this.setBody("");
+							if (existed) {
+								this.setResponseCode(204);
+								this.setResponseMessage("No content");
+								this.setBody("");
+							} else {
+								this.setResponseCode(201);
+								this.setResponseMessage("Created");
+								this.setBody("");
+							}
 						} else {
 							this.setResponseCode(403);
 							this.setResponseMessage("Access denied");

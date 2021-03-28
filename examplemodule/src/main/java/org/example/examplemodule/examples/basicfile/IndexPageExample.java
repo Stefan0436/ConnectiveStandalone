@@ -23,7 +23,8 @@ public class IndexPageExample extends IndexPageProvider {
 			names += f.getName();
 		}
 
-		setBody("My own index, little useless but, here is the file count: " + files.length + "\nFile names: " + names);
+		setBody("My own index, little useless, but here is the file count: " + files.length + "\nFile names: " + names
+				+ "\n\nTake a look at the sources of the DefaultIndexPage to get an idea of how to build such a page");
 	}
 
 }
