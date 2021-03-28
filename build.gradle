@@ -74,7 +74,7 @@ dependencies {
 	
 	implementation group: 'javax.activation', name: 'activation', version: '1.1.1'
 	
-	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-UTIL', version: '0.0.0.11'
+	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-UTIL', version: '0.0.0.12'
 }
 
 project.configurations.implementation.canBeResolved = true

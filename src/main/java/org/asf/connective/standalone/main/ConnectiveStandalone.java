@@ -25,7 +25,9 @@ import org.asf.connective.standalone.main.impl.ExtensionInstruction;
 import org.asf.connective.standalone.main.impl.IndexPageInstruction;
 import org.asf.connective.standalone.main.impl.PostHandlerInstruction;
 import org.asf.connective.standalone.main.impl.RestrictionInstruction;
+import org.asf.connective.standalone.main.impl.VirtualFileInstruction;
 import org.asf.connective.standalone.main.impl.VirtualRootInstruction;
+import org.asf.connective.standalone.main.impl.internal.ConnectiveAuthProvider;
 import org.asf.cyan.api.common.CYAN_COMPONENT;
 import org.asf.cyan.api.config.serializing.internal.Splitter;
 import org.asf.cyan.fluid.Transformer.AnnotationInfo;
@@ -59,7 +61,7 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 	private static Class<?>[] defaultClasses = new Class[] { ConnectiveHTTPServer.class, ConnectiveStandalone.class,
 			BasicFileModule.class, VirtualRootInstruction.class, DefaultIndexPageInstruction.class,
 			IndexPageInstruction.class, RestrictionInstruction.class, ExtensionInstruction.class,
-			AliasInstruction.class, PostHandlerInstruction.class };
+			AliasInstruction.class, PostHandlerInstruction.class, VirtualFileInstruction.class };
 
 	private static FluidClassPool modulePool = FluidClassPool.createEmpty();
 	private static ArrayList<ContextFileInstruction> instructions;
@@ -180,9 +182,9 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 				String username = cred.substring(0, cred.indexOf(":"));
 				String password = cred.substring(cred.indexOf(":") + 1);
 
-				if (!username.matches("^[A-Za-z0-9@.]+$")) {
+				if (!username.matches("^[A-Za-z0-9@. ']+$")) {
 					fatal("Failed to load CredString from command line! Unable to load!");
-					fatal("ERROR: Username not alphanumeric. (note: the '@' and '.' are also allowed)");
+					fatal("ERROR: Username not alphanumeric. (note: the '.', '@', ' ' and \"'\" are also allowed)");
 					fatal("");
 					fatal("Please specify -DdebugCredentials=\"CredString\" to load coremodules from the command line.");
 					fatal("The 'CredString' is the base64-encoded value of 'username:password' which needs to be specified that way.");
@@ -308,6 +310,7 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 
 	protected static void initComponent() throws IOException {
 		init = true;
+		ConnectiveAuthProvider.assign();
 
 		info("Intanciating configuration...");
 		if (implementation != null)

@@ -12,6 +12,8 @@ import org.asf.rats.http.providers.FilePostHandler;
 import org.asf.rats.http.providers.IFileAlias;
 import org.asf.rats.http.providers.IFileExtensionProvider;
 import org.asf.rats.http.providers.IFileRestrictionProvider;
+import org.asf.rats.http.providers.IVirtualFileProvider;
+
 import org.asf.rats.processors.HttpGetProcessor;
 import org.asf.rats.processors.HttpPostProcessor;
 
@@ -91,6 +93,12 @@ public abstract class ExampleModificationManager extends CyanComponent {
 								(FilePostHandler) Class.forName(arguments.get(0).substring("class:".length()), false,
 										instance.getClass().getClassLoader()).getConstructor().newInstance());
 
+					} else if (cmd.equals("virtualfile")) {
+
+						instance.registerVirtualFile(
+								(IVirtualFileProvider) Class.forName(arguments.get(0).substring("class:".length()), false,
+										instance.getClass().getClassLoader()).getConstructor().newInstance());
+
 					}
 				} catch (Exception e) {
 					error("Module error, could not run command: " + line, e);
@@ -105,6 +113,7 @@ public abstract class ExampleModificationManager extends CyanComponent {
 	private ArrayList<IFileExtensionProvider> extensions = new ArrayList<IFileExtensionProvider>();
 	private ArrayList<IFileRestrictionProvider> restrictions = new ArrayList<IFileRestrictionProvider>();
 	private ArrayList<FilePostHandler> handlers = new ArrayList<FilePostHandler>();
+	private ArrayList<IVirtualFileProvider> virtualFiles = new ArrayList<IVirtualFileProvider>();
 
 	/**
 	 * Register GET and/or POST processors
@@ -125,6 +134,13 @@ public abstract class ExampleModificationManager extends CyanComponent {
 	 */
 	protected void registerRestriction(IFileRestrictionProvider restriction) {
 		restrictions.add(restriction);
+	}
+
+	/**
+	 * Register virtual files
+	 */
+	protected void registerVirtualFile(IVirtualFileProvider restriction) {
+		virtualFiles.add(restriction);
 	}
 
 	/**
@@ -205,6 +221,7 @@ public abstract class ExampleModificationManager extends CyanComponent {
 		arg0.addProcessors(instance.processors);
 		arg0.addRestrictions(instance.restrictions);
 		arg0.addPostHandlers(instance.handlers);
+		arg0.addVirtualFiles(instance.virtualFiles);
 	}
 
 	/**

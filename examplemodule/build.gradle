@@ -50,6 +50,9 @@ ext.restrictionProviders = [
 ext.indexPages = [
 	"${group}.examples.basicfile.IndexPageExample"
 ]
+ext.virtualFileProviders = [
+	// "${group}.VirtualFileProvider"
+]
 ext.postHandlers = [ // file module post handlers
 	// "${group}.ContextPostHandler"
 ]
@@ -99,7 +102,7 @@ dependencies {
 	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A4'
 	implementation group: 'org.asf.cyan', name: 'CCFG', version: '1.0.0.A8'
 
-	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-UTIL', version: '0.0.0.11'
+	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-UTIL', version: '0.0.0.12'
 }
 
 createEclipseLaunches {
@@ -247,6 +250,10 @@ task genContextFile(dependsOn: processResources) {
         for (String processor : lowLevelGetAndPostProcessors) {
             builder.append("processor \"class:" + processor + "\"").append(System.lineSeparator());
         }
+        for (String processor : virtualFileProviders) {
+            builder.append("virtualfile \"class:" + processor + "\"").append(System.lineSeparator());
+        }
+		
         Files.writeString(new File(sourceSets.main.output.resourcesDir, "modules." + project.name + ".ctxf").toPath(), builder.toString());
     }
 }
@@ -312,7 +319,7 @@ String genAdditions() {
 	boolean isMulti = false
 	for (String provider : extensionProviders) {
 		moduleConfigAdditionsStandalone = checkStandalone(moduleConfigAdditionsStandalone, first)
-		if (first && !multi && (aliasProviders.size() != 0 || restrictionProviders.size() != 0 || indexPages.size() != 0 || postHandlers.size() != 0)) {
+		if (first && !multi && (aliasProviders.size() != 0 || restrictionProviders.size() != 0 || indexPages.size() != 0 || postHandlers.size() != 0 || virtualFileProviders.size() != 0)) {
 			moduleConfigAdditionsStandalone += System.lineSeparator()
 		}
 
@@ -327,7 +334,7 @@ String genAdditions() {
 	for (String provider : aliasProviders) {
 		moduleConfigAdditionsStandalone = checkStandalone(moduleConfigAdditionsStandalone, first)
 
-		if (first && !multi && (restrictionProviders.size() != 0 || indexPages.size() != 0 || postHandlers.size() != 0)) {
+		if (first && !multi && (restrictionProviders.size() != 0 || indexPages.size() != 0 || postHandlers.size() != 0 || virtualFileProviders.size() != 0)) {
 			moduleConfigAdditionsStandalone += System.lineSeparator()
 		}
 
@@ -344,7 +351,7 @@ String genAdditions() {
 	for (String provider : restrictionProviders) {
 		moduleConfigAdditionsStandalone = checkStandalone(moduleConfigAdditionsStandalone, first)
 
-		if (first && !multi && (indexPages.size() != 0 || postHandlers.size() != 0)) {
+		if (first && !multi && (indexPages.size() != 0 || postHandlers.size() != 0 || virtualFileProviders.size() != 0)) {
 			moduleConfigAdditionsStandalone += System.lineSeparator()
 		}
 
@@ -361,7 +368,7 @@ String genAdditions() {
 	for (String provider : indexPages) {
 		moduleConfigAdditionsStandalone = checkStandalone(moduleConfigAdditionsStandalone, first)
 
-		if (first && !multi && (postHandlers.size() != 0)) {
+		if (first && !multi && (postHandlers.size() != 0 || virtualFileProviders.size() != 0)) {
 			moduleConfigAdditionsStandalone += System.lineSeparator()
 		}
 
@@ -377,6 +384,10 @@ String genAdditions() {
 	first = true
 	for (String provider : postHandlers) {
 		moduleConfigAdditionsStandalone = checkStandalone(moduleConfigAdditionsStandalone, first)
+		
+		if (first && !multi && (virtualFileProviders.size() != 0)) {
+			moduleConfigAdditionsStandalone += System.lineSeparator()
+		}
 
 		if (multi)
 			isMulti = true;
@@ -385,6 +396,19 @@ String genAdditions() {
 
 		moduleConfigAdditionsStandalone += System.lineSeparator()
 		moduleConfigAdditionsStandalone += "    posthandler \"class:" + provider + "\""
+	}
+
+	first = true
+	for (String provider : virtualFileProviders) {
+		moduleConfigAdditionsStandalone = checkStandalone(moduleConfigAdditionsStandalone, first)
+		
+		if (multi)
+			isMulti = true;
+		multi = true;
+		first = false;
+
+		moduleConfigAdditionsStandalone += System.lineSeparator()
+		moduleConfigAdditionsStandalone += "    virtualfile \"class:" + provider + "\""
 	}
 
 	if (!moduleConfigAdditionsStandalone.isEmpty()) {

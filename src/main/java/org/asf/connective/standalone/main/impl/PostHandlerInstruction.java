@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
-import java.nio.file.Files;
 import java.util.Base64;
 
 import org.apache.logging.log4j.LogManager;
@@ -15,6 +14,8 @@ import org.asf.connective.standalone.ContextFileInstruction;
 import org.asf.connective.standalone.main.ConnectiveStandalone;
 
 import org.asf.rats.HttpRequest;
+import org.asf.rats.IAuthenticationProvider;
+import org.asf.rats.Memory;
 import org.asf.rats.http.ProviderContext;
 import org.asf.rats.http.ProviderContextFactory;
 import org.asf.rats.http.providers.FilePostHandler;
@@ -73,69 +74,35 @@ public class PostHandlerInstruction implements ContextFileInstruction {
 					String username = cred.substring(0, cred.indexOf(":"));
 					String password = cred.substring(cred.indexOf(":") + 1);
 
-					if (username.matches("^[A-Za-z0-9@.]+$")) {
-						File userFile = new File(new File(serverDir, "credentials"),
-								"gr." + group + "." + username + ".cred");
-						if (!userFile.exists()) {
+					try {
+						if (Memory.getInstance().get("connective.standard.authprovider")
+								.getValue(IAuthenticationProvider.class)
+								.authenticate(group, username, password.toCharArray())) {
+							password = null;
+
+							File file = new File(new File(serverDir, context.getSourceDirectory()), path);
+							if (!file.getParentFile().exists()) {
+								file.getParentFile().mkdirs();
+							}
+
+							FileOutputStream strm = new FileOutputStream(file);
+							getRequest().transferBody(strm);
+							strm.close();
+
+							this.setResponseCode(204);
+							this.setResponseMessage("No content");
+							this.setBody("");
+						} else {
 							this.setResponseCode(403);
 							this.setResponseMessage("Access denied");
 							this.setBody("text/html", null);
-						} else {
-							try {
-								String userPass = new String(
-										Base64.getDecoder().decode(Files.readAllBytes(userFile.toPath())));
-
-								if (userPass.equals(password)) {
-									password = null;
-
-									File file = new File(new File(serverDir, context.getSourceDirectory()), path);
-									if (!file.getParentFile().exists()) {
-										file.getParentFile().mkdirs();
-									}
-
-									FileOutputStream strm = new FileOutputStream(file);
-									if (getHeader("Content-Length") != null) {
-										long length = Long.valueOf(getHeader("Content-Length"));
-										int tr = 0;
-										for (long i = 0; i < length; i += tr) {
-											tr = Integer.MAX_VALUE / 1000;
-											if ((length - (long) i) < tr) {
-												tr = getBodyStream().available();
-												if (tr == 0) {
-													strm.write(getBodyStream().read());
-													i += 1;
-												}
-												tr = getBodyStream().available();
-											}
-											strm.write(getBodyStream().readNBytes(tr));
-										}
-									} else {
-										getBodyStream().transferTo(strm);
-									}
-									strm.close();
-
-									this.setResponseCode(204);
-									this.setResponseMessage("No content");
-									this.setBody("");
-								} else {
-									this.setResponseCode(403);
-									this.setResponseMessage("Access denied");
-									this.setBody("text/html", null);
-								}
-
-								userPass = null;
-							} catch (IOException e) {
-								this.setResponseCode(503);
-								this.setResponseMessage("Internal server error");
-								this.setBody("text/html", null);
-								logger.error(MarkerManager.getMarker(group.toUpperCase()),
-										"Failed to process user file: " + userFile, e);
-							}
 						}
-					} else {
-						this.setResponseCode(403);
-						this.setResponseMessage("Access denied");
+					} catch (IOException e) {
+						this.setResponseCode(503);
+						this.setResponseMessage("Internal server error");
 						this.setBody("text/html", null);
+						logger.error(MarkerManager.getMarker(group.toUpperCase()),
+								"Failed to process user, group: " + group + ", username: " + username, e);
 					}
 					password = null;
 				} else {
