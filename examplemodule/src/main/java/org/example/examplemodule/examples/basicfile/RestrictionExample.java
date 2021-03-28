@@ -8,7 +8,7 @@ public class RestrictionExample implements IFileRestrictionProvider {
 
 	@Override
 	public boolean checkRestriction(String path, HttpRequest request) {
-		if (!request.headers.containsKey("My-Own-Header") && (path.startsWith("/tester/") || request.equals("/tester"))) {
+		if (!request.headers.containsKey("My-Own-Header") && (path.startsWith("/tester/") || path.equals("/tester"))) {
 			return false;
 		} else {
 			return true;
@@ -16,7 +16,7 @@ public class RestrictionExample implements IFileRestrictionProvider {
 	}
 
 	@Override
-	public String getResponseMessage() {
+	public String getResponseMessage(HttpRequest request) {
 		return "Missing header, access denied.";
 	}
 

@@ -8,14 +8,14 @@ import org.asf.cyan.api.common.CyanComponent;
 import org.asf.rats.ConnectiveHTTPServer;
 import org.asf.rats.Memory;
 import org.asf.rats.http.ProviderContextFactory;
-import org.asf.rats.http.providers.FilePostHandler;
+import org.asf.rats.http.providers.FileUploadHandler;
 import org.asf.rats.http.providers.IFileAlias;
 import org.asf.rats.http.providers.IFileExtensionProvider;
 import org.asf.rats.http.providers.IFileRestrictionProvider;
 import org.asf.rats.http.providers.IVirtualFileProvider;
 
 import org.asf.rats.processors.HttpGetProcessor;
-import org.asf.rats.processors.HttpPostProcessor;
+import org.asf.rats.processors.HttpUploadProcessor;
 
 // Our superclass for managing modifications made to the server
 public abstract class ExampleModificationManager extends CyanComponent {
@@ -87,10 +87,10 @@ public abstract class ExampleModificationManager extends CyanComponent {
 						instance.registerAlias((IFileAlias) Class.forName(arguments.get(0).substring("class:".length()),
 								false, instance.getClass().getClassLoader()).getConstructor().newInstance());
 
-					} else if (cmd.equals("posthandler")) {
+					} else if (cmd.equals("uploadhandler")) {
 
-						instance.registerPostHandler(
-								(FilePostHandler) Class.forName(arguments.get(0).substring("class:".length()), false,
+						instance.registerUploadHandler(
+								(FileUploadHandler) Class.forName(arguments.get(0).substring("class:".length()), false,
 										instance.getClass().getClassLoader()).getConstructor().newInstance());
 
 					} else if (cmd.equals("virtualfile")) {
@@ -112,7 +112,7 @@ public abstract class ExampleModificationManager extends CyanComponent {
 	private ArrayList<IFileAlias> aliases = new ArrayList<IFileAlias>();
 	private ArrayList<IFileExtensionProvider> extensions = new ArrayList<IFileExtensionProvider>();
 	private ArrayList<IFileRestrictionProvider> restrictions = new ArrayList<IFileRestrictionProvider>();
-	private ArrayList<FilePostHandler> handlers = new ArrayList<FilePostHandler>();
+	private ArrayList<FileUploadHandler> handlers = new ArrayList<FileUploadHandler>();
 	private ArrayList<IVirtualFileProvider> virtualFiles = new ArrayList<IVirtualFileProvider>();
 
 	/**
@@ -151,9 +151,9 @@ public abstract class ExampleModificationManager extends CyanComponent {
 	}
 
 	/**
-	 * Register file post handlers
+	 * Register file upload handlers
 	 */
-	protected void registerPostHandler(FilePostHandler handler) {
+	protected void registerUploadHandler(FileUploadHandler handler) {
 		handlers.add(handler);
 	}
 
@@ -204,8 +204,8 @@ public abstract class ExampleModificationManager extends CyanComponent {
 		instance.startModule();
 		Memory.getInstance().getOrCreate("bootstrap.call").<Runnable>append(() -> {
 			for (HttpGetProcessor proc : instance.processors) {
-				if (proc instanceof HttpPostProcessor)
-					ConnectiveHTTPServer.getMainServer().registerProcessor((HttpPostProcessor) proc);
+				if (proc instanceof HttpUploadProcessor)
+					ConnectiveHTTPServer.getMainServer().registerProcessor((HttpUploadProcessor) proc);
 				else
 					ConnectiveHTTPServer.getMainServer().registerProcessor(proc);
 			}
@@ -220,7 +220,7 @@ public abstract class ExampleModificationManager extends CyanComponent {
 		arg0.addExtensions(instance.extensions);
 		arg0.addProcessors(instance.processors);
 		arg0.addRestrictions(instance.restrictions);
-		arg0.addPostHandlers(instance.handlers);
+		arg0.addUploadHandlers(instance.handlers);
 		arg0.addVirtualFiles(instance.virtualFiles);
 	}
 

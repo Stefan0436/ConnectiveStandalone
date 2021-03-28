@@ -18,13 +18,13 @@ import org.asf.rats.IAuthenticationProvider;
 import org.asf.rats.Memory;
 import org.asf.rats.http.ProviderContext;
 import org.asf.rats.http.ProviderContextFactory;
-import org.asf.rats.http.providers.FilePostHandler;
+import org.asf.rats.http.providers.FileUploadHandler;
 import org.asf.rats.http.providers.IContextProviderExtension;
 import org.asf.rats.http.providers.IPathProviderExtension;
 
-public class PostHandlerInstruction implements ContextFileInstruction {
+public class UploadHandlerInstruction implements ContextFileInstruction {
 
-	public static class DefaultPostHandler extends FilePostHandler
+	public static class DefaultUploadHandler extends FileUploadHandler
 			implements IContextProviderExtension, IPathProviderExtension {
 
 		private String path = null;
@@ -32,12 +32,12 @@ public class PostHandlerInstruction implements ContextFileInstruction {
 		private ProviderContext context;
 		private String affectedPath = "";
 		private String group = "";
-		private Logger logger = LogManager.getLogger("POST-PROCESSING");
+		private Logger logger = LogManager.getLogger("UPLOAD-PROCESSING");
 
 		private String serverDir = System.getProperty("rats.config.dir") == null ? "."
 				: System.getProperty("rats.config.dir");
 
-		public DefaultPostHandler(String group, String path, ProviderContext context) {
+		public DefaultUploadHandler(String group, String path, ProviderContext context) {
 			this.group = group;
 
 			if (!path.startsWith("/"))
@@ -50,8 +50,8 @@ public class PostHandlerInstruction implements ContextFileInstruction {
 		}
 
 		@Override
-		protected FilePostHandler newInstance() {
-			return new DefaultPostHandler(group, affectedPath, context);
+		protected FileUploadHandler newInstance() {
+			return new DefaultUploadHandler(group, affectedPath, context);
 		}
 
 		@Override
@@ -63,7 +63,10 @@ public class PostHandlerInstruction implements ContextFileInstruction {
 		}
 
 		@Override
-		public void process(String contentType, Socket client) {
+		public boolean process(String contentType, Socket client, String method) {
+			if (!method.equals("PUT"))
+				return false;
+
 			if (getHeader("Authorization") != null) {
 				String header = getHeader("Authorization");
 				String type = header.substring(0, header.indexOf(" "));
@@ -86,7 +89,7 @@ public class PostHandlerInstruction implements ContextFileInstruction {
 							}
 
 							FileOutputStream strm = new FileOutputStream(file);
-							getRequest().transferBody(strm);
+							getRequest().transferRequestBody(strm);
 							strm.close();
 
 							this.setResponseCode(204);
@@ -117,6 +120,7 @@ public class PostHandlerInstruction implements ContextFileInstruction {
 				this.setResponseMessage("Authorization required");
 				this.setBody("");
 			}
+			return true;
 		}
 
 		@Override
@@ -133,7 +137,7 @@ public class PostHandlerInstruction implements ContextFileInstruction {
 
 	@Override
 	public String instructionName() {
-		return "posthandler";
+		return "uploadhandler";
 	}
 
 	@Override
@@ -151,16 +155,16 @@ public class PostHandlerInstruction implements ContextFileInstruction {
 			throws IOException, InstantiationException, IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
 		if (arguments[0].startsWith("class:")) {
-			factory.addPostHandler(
-					(FilePostHandler) Class
+			factory.addUploadHandler(
+					(FileUploadHandler) Class
 							.forName(arguments[0].substring("class:".length()), false,
 									ConnectiveStandalone.getInstance().getClassLoader())
 							.getConstructor().newInstance());
 		} else if (arguments.length == 2) {
-			factory.addPostHandler(new DefaultPostHandler(arguments[1], arguments[0], null));
+			factory.addUploadHandler(new DefaultUploadHandler(arguments[1], arguments[0], null));
 		} else {
 			throw new IOException(
-					"Invalid format! Expected either: 'folder-path' 'allowed-group' or: 'class:<post-handler>'");
+					"Invalid format! Expected either: 'folder-path' 'allowed-group' or: 'class:<upload-handler>'");
 		}
 	}
 

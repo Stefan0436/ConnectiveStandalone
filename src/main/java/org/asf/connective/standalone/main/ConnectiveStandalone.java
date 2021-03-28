@@ -23,7 +23,7 @@ import org.asf.connective.standalone.main.impl.AliasInstruction;
 import org.asf.connective.standalone.main.impl.DefaultIndexPageInstruction;
 import org.asf.connective.standalone.main.impl.ExtensionInstruction;
 import org.asf.connective.standalone.main.impl.IndexPageInstruction;
-import org.asf.connective.standalone.main.impl.PostHandlerInstruction;
+import org.asf.connective.standalone.main.impl.UploadHandlerInstruction;
 import org.asf.connective.standalone.main.impl.RestrictionInstruction;
 import org.asf.connective.standalone.main.impl.VirtualFileInstruction;
 import org.asf.connective.standalone.main.impl.VirtualRootInstruction;
@@ -40,7 +40,7 @@ import org.asf.rats.http.BasicFileModule;
 import org.asf.rats.http.FileProcessorContextFactory;
 import org.asf.rats.http.ProviderContextFactory;
 import org.asf.rats.processors.HttpGetProcessor;
-import org.asf.rats.processors.HttpPostProcessor;
+import org.asf.rats.processors.HttpUploadProcessor;
 import org.objectweb.asm.tree.ClassNode;
 
 /**
@@ -61,7 +61,7 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 	private static Class<?>[] defaultClasses = new Class[] { ConnectiveHTTPServer.class, ConnectiveStandalone.class,
 			BasicFileModule.class, VirtualRootInstruction.class, DefaultIndexPageInstruction.class,
 			IndexPageInstruction.class, RestrictionInstruction.class, ExtensionInstruction.class,
-			AliasInstruction.class, PostHandlerInstruction.class, VirtualFileInstruction.class };
+			AliasInstruction.class, UploadHandlerInstruction.class, VirtualFileInstruction.class };
 
 	private static FluidClassPool modulePool = FluidClassPool.createEmpty();
 	private static ArrayList<ContextFileInstruction> instructions;
@@ -405,8 +405,8 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 								false, moduleLoader);
 
 						HttpGetProcessor proc = cls.getConstructor().newInstance();
-						if (proc instanceof HttpPostProcessor) {
-							ConnectiveHTTPServer.getMainServer().registerProcessor((HttpPostProcessor) proc);
+						if (proc instanceof HttpUploadProcessor) {
+							ConnectiveHTTPServer.getMainServer().registerProcessor((HttpUploadProcessor) proc);
 						} else {
 							ConnectiveHTTPServer.getMainServer().registerProcessor(proc);
 						}

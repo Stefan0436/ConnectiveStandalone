@@ -14,7 +14,7 @@ public class AliasExample implements IFileAlias {
 	}
 
 	@Override
-	public String rewrite(HttpRequest arg0, String arg1) {		
+	public String rewrite(HttpRequest arg0, String arg1) {
 		return "/example.html";
 	}
 

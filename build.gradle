@@ -3,7 +3,7 @@ plugins {
 	id 'maven-publish'
 }
 
-version = "1.0.0.A1"
+version = "1.0.0.A2"
 group = "org.asf.connective"
 
 def authorname = "AerialWorks Software Foundation"
@@ -21,7 +21,7 @@ repositories {
 jar {
 	manifest {
 		attributes([
-			"Specification-Title": "1.0.0.A2", // ConnectiveHTTP specification
+			"Specification-Title": "1.0.0.A3", // ConnectiveHTTP specification
 			"Specification-Vendor": "${authorname}",
 			"Specification-Version": project.version,
 			"Implementation-Title": project.name,
