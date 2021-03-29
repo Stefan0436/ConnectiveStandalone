@@ -8,6 +8,8 @@ import org.asf.rats.http.providers.IndexPageProvider;
 // Example index page
 public class IndexPageExample extends IndexPageProvider {
 
+	// IMPORTANT: the contextfile instructions depend on an empty constructor for instantiation.
+
 	@Override
 	protected IndexPageProvider newInstance() {
 		return new IndexPageExample();

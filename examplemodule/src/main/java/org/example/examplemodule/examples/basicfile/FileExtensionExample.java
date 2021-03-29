@@ -15,8 +15,18 @@ public class FileExtensionExample implements IFileExtensionProvider, IServerProv
 
 	private ConnectiveHTTPServer server;
 
+	// IMPORTANT: the contextfile instructions depend on an empty constructor for instantiation.
+
 	@Override
 	public String fileExtension() {
+
+		//
+		// Important notice:
+		// This method should be considered a final field and must not use code that can
+		// generate dynamic results, this field runs in the main instance, rewrite runs
+		// in its own instance, see newInstance() below.
+		//
+
 		return ".test";
 	}
 
@@ -39,6 +49,11 @@ public class FileExtensionExample implements IFileExtensionProvider, IServerProv
 	@Override
 	public void provide(ConnectiveHTTPServer arg0) {
 		this.server = arg0;
+	}
+
+	@Override
+	public IFileExtensionProvider newInstance() {
+		return new FileExtensionExample();
 	}
 
 }
