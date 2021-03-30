@@ -28,7 +28,7 @@ public class ConnectiveAuthProvider implements IAuthenticationProvider {
 
 	@Override
 	public boolean authenticate(String group, String username, char[] password) throws IOException {
-		if (!username.matches("^[A-Za-z0-9.@ ']+$") || !group.matches("^[A-Za-z0-9]+$"))
+		if (!username.matches("^[A-Za-z0-9\\-@. ']+$") || !group.matches("^[A-Za-z0-9]+$"))
 			return false;
 
 		File authFile = new File(new File(serverDir, "credentials"), "gr." + group + "." + username + ".cred");
