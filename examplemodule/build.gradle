@@ -101,7 +101,7 @@ dependencies {
 	implementation name: "HttpBasicFileModule"
 
 	implementation group: 'org.asf.cyan', name: 'CyanComponents', version: '1.0.0.A4'
-	implementation group: 'org.asf.cyan', name: 'CCFG', version: '1.0.0.A9'
+	implementation group: 'org.asf.cyan', name: 'CCFG', version: '1.0.0.A10'
 
 	implementation group: 'org.asf.aos.util.service', name: 'aosutil-service-SLIB-UTIL', version: '0.0.0.12'
 }

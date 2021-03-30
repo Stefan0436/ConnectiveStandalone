@@ -22,7 +22,8 @@ public class ConnectiveAuthProvider implements IAuthenticationProvider {
 			: System.getProperty("rats.config.dir");
 
 	public static void assign() {
-		Memory.getInstance().getOrCreate("connective.standard.authprovider").assign(new ConnectiveAuthProvider());
+		if (Memory.getInstance().get("connective.standard.authprovider") == null)
+			Memory.getInstance().getOrCreate("connective.standard.authprovider").assign(new ConnectiveAuthProvider());
 	}
 
 	@Override
