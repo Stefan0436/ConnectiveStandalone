@@ -48,7 +48,7 @@ public class CredentialTool {
 
 					if (!username.matches("^[A-Za-z0-9\\-@. ']+$")) {
 						System.err.println(
-								"Use of illegal characters detected, only alphanumeric characters are allowed. (with exception to the '.', '@', ' ' and \"'\" which are also allowed)");
+								"Use of illegal characters detected, only alphanumeric characters are allowed. (with exception to the '.', '@', ' ', '-' and \"'\" which are also allowed)");
 						System.exit(-1);
 						return;
 					}
@@ -85,7 +85,7 @@ public class CredentialTool {
 
 			if (!username.matches("^[A-Za-z0-9\\-@. ']+$")) {
 				System.err.println(
-						"Use of illegal characters detected, only alphanumeric characters are allowed. (with exception to the '.', '@', ' ' and \"'\" which are also allowed)");
+						"Use of illegal characters detected, only alphanumeric characters are allowed. (with exception to the '.', '@', ' ', '-' and \"'\" which are also allowed)");
 				System.exit(-1);
 				return;
 			}
@@ -170,8 +170,8 @@ public class CredentialTool {
 		System.err.println("");
 		System.err.println("");
 		System.err.println(
-				"NOTE: the group only allows for use of alphanumeric characters, so does the username, though");
-		System.err.println("      the username also allows for use of the following characters: '@', '.'");
+				"NOTE: the group only allows for use of alphanumeric characters, however the username also allows for");
+		System.err.println("      the use of the following characters: '.', '@', ' ', '-' and \"'\"");
 		System.err.println("");
 		System.err.println(
 				"----------------------------------------------------------------------------------------------------");
