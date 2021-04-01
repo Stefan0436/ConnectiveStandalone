@@ -81,6 +81,8 @@ public class ExampleModule extends ExampleModificationManager {
 	}
 
 	private void readConfig() {
+		hasConfigChanged = false;
+
 		// Get the server configuration as ModuleBasedConfiguration from the
 		// 'memory.modules.shared.config' entry.
 		ModuleBasedConfiguration<?> config = Memory.getInstance().get("memory.modules.shared.config")
