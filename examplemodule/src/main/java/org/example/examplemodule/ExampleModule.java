@@ -71,6 +71,13 @@ public class ExampleModule extends ExampleModificationManager {
 
 		// Or... you can do it all in one go:
 //		Memory.getInstance().getOrCreate("bootstrap.call").<Runnable>append(() -> readConfig());
+		
+		// Reload handler,
+		//
+		// NOTE: 
+		// The reload handler is not official, though it has been added to the php and git modules.
+		// A module will need to call it in order for it to work.
+		Memory.getInstance().getOrCreate("bootstrap.reload").<Runnable>append(() -> readConfig());
 	}
 
 	private void readConfig() {
