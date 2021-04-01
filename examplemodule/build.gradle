@@ -433,10 +433,10 @@ String genAdditions() {
 			moduleConfigAdditionsStandalone += System.lineSeparator()
 			moduleConfigAdditionsStandalone += "# ..."
 			moduleConfigAdditionsStandalone += System.lineSeparator()
-			moduleConfigAdditionsStandalone += "processors> {"
 			moduleConfigAdditionsStandalone += System.lineSeparator()
-			moduleConfigAdditionsStandalone += "    # ..."
+			moduleConfigAdditionsStandalone += "processors> '"
 			moduleConfigAdditionsStandalone += System.lineSeparator()
+			moduleConfigAdditionsStandalone += "# ..."
 		}
 	}
 
@@ -453,23 +453,23 @@ String genAdditions() {
 			moduleConfigAdditionsStandalone += System.lineSeparator()
 			moduleConfigAdditionsStandalone += "# ..."
 			moduleConfigAdditionsStandalone += System.lineSeparator()
-			moduleConfigAdditionsStandalone += "processors> {"
 			moduleConfigAdditionsStandalone += System.lineSeparator()
-			moduleConfigAdditionsStandalone += "    # ..."
+			moduleConfigAdditionsStandalone += "processors> '"
 			moduleConfigAdditionsStandalone += System.lineSeparator()
+			moduleConfigAdditionsStandalone += "# ..."
 		}
 
 		moduleConfigAdditionsStandalone += System.lineSeparator()
-		moduleConfigAdditionsStandalone += "    " + processor
+		moduleConfigAdditionsStandalone += processor
 	}
 
 	if (!moduleConfigAdditionsStandalone.isEmpty()) {
 		if (lowLevelGetAndPostProcessors.size() != 0) {
 			moduleConfigAdditionsStandalone += System.lineSeparator()
+			moduleConfigAdditionsStandalone += "# ..."
 			moduleConfigAdditionsStandalone += System.lineSeparator()
-			moduleConfigAdditionsStandalone += "    # ..."
+			moduleConfigAdditionsStandalone += "'"
 			moduleConfigAdditionsStandalone += System.lineSeparator()
-			moduleConfigAdditionsStandalone += "}"
 			moduleConfigAdditionsStandalone += System.lineSeparator()
 			moduleConfigAdditionsStandalone += "# ..."
 		}
