@@ -23,6 +23,7 @@ function exitmeth() {
 }
 
 function execute() {
+    chmod +x gradlew
     ./gradlew installation || return $?
     if [ ! -d "$dir/server" ]; then
         mkdir "$dir/server"
