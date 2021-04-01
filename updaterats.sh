@@ -21,7 +21,7 @@ function exitmeth() {
 }
 
 function execute() {
-    gradle installation || return $?
+    ./gradlew installation || return $?
     
     if [ ! -d "$dir/libraries" ]; then mkdir "$dir/libraries"; fi
     cp -r "build/Installations/"*.jar "$dir/libraries"

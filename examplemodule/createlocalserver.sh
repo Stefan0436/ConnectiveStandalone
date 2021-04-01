@@ -23,7 +23,7 @@ function exitmeth() {
 }
 
 function execute() {
-    gradle installation || return $?
+    ./gradlew installation || return $?
     if [ ! -d "$dir/server" ]; then
         mkdir "$dir/server"
     fi
