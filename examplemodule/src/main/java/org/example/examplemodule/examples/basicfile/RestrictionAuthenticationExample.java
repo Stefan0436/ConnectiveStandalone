@@ -114,10 +114,7 @@ public class RestrictionAuthenticationExample implements IFileRestrictionProvide
 
 	@Override
 	public int getResponseCode(HttpRequest request) {
-		if (request.headers.containsKey("Authorization"))
-			return 403;
-		else
-			return 401;
+        return 401;
 	}
 
 	@Override
