@@ -66,7 +66,7 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 	private static ConnectiveStandalone impl;
 
 	private static URLClassLoader moduleLoader = null;
-	private static Class<?>[] defaultClasses = new Class[] { ConnectiveHTTPServer.class, ConnectiveStandalone.class,
+	private static Class<?>[] defaultClasses = new Class[] { ConnectiveStandalone.class, ConnectiveHTTPServer.class,
 			BasicFileModule.class, VirtualRootInstruction.class, DefaultIndexPageInstruction.class,
 			IndexPageInstruction.class, RestrictionInstruction.class, ExtensionInstruction.class,
 			AliasInstruction.class, UploadHandlerInstruction.class, VirtualFileInstruction.class,
