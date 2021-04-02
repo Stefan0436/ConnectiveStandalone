@@ -25,7 +25,7 @@ public class ExampleUploadProcessor extends HttpUploadProcessor {
 			// Deny other methods
 			this.setResponseCode(405);
 			this.setResponseMessage(method.toUpperCase() + " is not supported.");
-			this.setBody(getServer().genError(getResponse(), getRequest())); // Generate the error page
+			this.setBody("text/html", getServer().genError(getResponse(), getRequest())); // Generate the error page
 		}
 	}
 
