@@ -46,6 +46,7 @@ import org.asf.rats.Memory;
 import org.asf.rats.http.BasicFileModule;
 import org.asf.rats.http.FileProcessorContextFactory;
 import org.asf.rats.http.ProviderContextFactory;
+import org.asf.rats.http.internal.implementation.DefaultFileProcessor;
 import org.asf.rats.processors.HttpGetProcessor;
 import org.asf.rats.processors.HttpUploadProcessor;
 import org.objectweb.asm.tree.ClassNode;
@@ -468,6 +469,7 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 	protected static void initComponent() throws IOException {
 		init = true;
 		ConnectiveAuthProvider.assign();
+		DefaultFileProcessor.assign();
 
 		info("Intanciating configuration...");
 		if (implementation != null)
