@@ -94,8 +94,9 @@ public class UploadHandlerInstruction implements ContextFileInstruction {
 							strm.close();
 
 							if (existed) {
-								this.setResponseCode(204);
-								this.setResponseMessage("No content");
+								// I know you are supposed to return 204, but gradle doesn't like that from our system
+								this.setResponseCode(201); 
+								this.setResponseMessage("Updated");
 								this.setBody("");
 							} else {
 								this.setResponseCode(201);
