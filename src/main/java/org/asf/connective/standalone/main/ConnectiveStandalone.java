@@ -578,7 +578,7 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 				factory.setOption(ConnectiveServerFactory.OPTION_DISABLE_MODULE_IMPLEMENTATIONS);
 			else if (impl != null)
 				factory.setImplementation(impl);
-			else
+			else if (!config.implementation.equals("auto"))
 				throw new RuntimeException("Invalid server implementation: " + config.implementation);
 
 			info("Creating server: " + name + "\nServer settings:\n - IP: " + config.ip + "\n - Port: " + config.port
