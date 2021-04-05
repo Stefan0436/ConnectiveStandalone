@@ -46,8 +46,11 @@ public class ConnectiveConfiguration extends ModuleBasedConfiguration<Connective
 		return "";
 	}
 
-	@Comment("HTTP Server Port")
+	@Comment("Default HTTP Server Port")
 	public int httpPort = 8080;
+
+	@Comment("Default HTTP Server IP")
+	public String httpIp = "0.0.0.0";
 
 	@Comment("HTTP Context Configuration")
 	@Comment("Format: context-root> 'contextfile'")

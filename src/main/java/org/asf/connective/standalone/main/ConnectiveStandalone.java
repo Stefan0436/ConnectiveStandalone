@@ -10,9 +10,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,9 +44,11 @@ import org.asf.cyan.fluid.bytecode.FluidClassPool;
 import org.asf.cyan.fluid.bytecode.sources.LoaderClassSourceProvider;
 import org.asf.cyan.fluid.implementation.CyanTransformer;
 import org.asf.rats.ConnectiveHTTPServer;
+import org.asf.rats.ConnectiveServerFactory;
 import org.asf.rats.Memory;
 import org.asf.rats.http.BasicFileModule;
 import org.asf.rats.http.FileProcessorContextFactory;
+import org.asf.rats.http.ProviderContext;
 import org.asf.rats.http.ProviderContextFactory;
 import org.asf.rats.http.internal.implementation.DefaultFileProcessor;
 import org.asf.rats.processors.HttpGetProcessor;
@@ -79,6 +83,16 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 		return moduleLoader;
 	}
 
+	public static void deleteDir(File dir) {
+		for (File f : dir.listFiles(t -> !t.isDirectory())) {
+			f.delete();
+		}
+		for (File d : dir.listFiles(t -> t.isDirectory())) {
+			deleteDir(d);
+		}
+		dir.delete();
+	}
+
 	/**
 	 * Main init method, called by java
 	 * 
@@ -86,6 +100,9 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 	 * @throws IllegalStateException If loading fails
 	 */
 	public static void main(String[] args) throws IllegalStateException, IOException {
+		if (new File("logs").exists())
+			deleteDir(new File("logs"));
+
 		if (args.length != 0 && args[0].equals("credtool")) {
 			CredentialTool.main(Arrays.copyOfRange(args, 1, args.length));
 			return;
@@ -466,11 +483,17 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 		return findClasses(getMainImplementation(), supertypeOrInterface);
 	}
 
+	@SuppressWarnings("unchecked")
 	protected static void initComponent() throws IOException {
 		init = true;
+
+		//
+		// Assign implementations
 		ConnectiveAuthProvider.assign();
 		DefaultFileProcessor.assign();
 
+		//
+		// Load config
 		info("Intanciating configuration...");
 		if (implementation != null)
 			ConnectiveConfiguration.getInstance().httpPort = implementation.getPort();
@@ -479,75 +502,144 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 		ConnectiveConfiguration.getInstance().readAll();
 
 		info("Loading contextfile(s)...");
+
+		ArrayList<ProviderContext> defaultContext = new ArrayList<ProviderContext>();
 		ConnectiveConfiguration.getInstance().context.forEach((key, contextFile) -> {
-			info("Creating context: " + key + "...");
-
-			ProviderContextFactory context = new ProviderContextFactory();
-			context.setExecLocation(key);
-			if (!key.startsWith("/")) {
-				key = (System.getProperty("rats.config.dir") == null ? "." : System.getProperty("rats.config.dir"))
-						+ "/" + key;
-			}
-			if (!new File(key).exists()) {
-				new File(key).mkdirs();
-			}
-
-			for (String line : contextFile.replaceAll("\r", "").split("\n")) {
-				if (line.isBlank() || line.startsWith("#"))
-					continue;
-
-				ArrayList<String> arguments = parseCommand(line);
-				if (arguments.size() != 0) {
-					String cmd = arguments.get(0);
-					arguments.remove(0);
-
-					boolean found = false;
-					if (instructions == null) {
-						instructions = new ArrayList<ContextFileInstruction>();
-						for (Class<ContextFileInstruction> instr : findClasses(ContextFileInstruction.class)) {
-							try {
-								Constructor<ContextFileInstruction> ctor = instr.getDeclaredConstructor();
-								ctor.setAccessible(true);
-								ContextFileInstruction ins = ctor.newInstance();
-								instructions.add(ins);
-							} catch (Exception e) {
-								error("Context instruction failed to register: " + instr.getTypeName(), e);
-							}
-						}
-					}
-
-					ContextFileInstruction instruction = null;
-					for (ContextFileInstruction instr : instructions) {
-						if (instr.instructionName().equals(cmd)) {
-							found = true;
-							instruction = instr;
-							break;
-						}
-					}
-					if (!found) {
-						warn("Failed to execute context instruction as it was not found. Instruction: " + cmd);
-					} else {
-						if (arguments.size() < instruction.minimalArguments() || (instruction.maximalArguments() != -1
-								&& arguments.size() > instruction.maximalArguments())) {
-							error("Invalid arguments for instruction '" + line + "'");
-						} else {
-							try {
-								instruction.run(arguments.toArray(t -> new String[t]), context);
-							} catch (Exception e) {
-								error("Failed to run instruction: " + cmd, e);
-							}
-						}
-					}
-				}
-			}
-
-			FileProcessorContextFactory.getDefault().addProviderContext(context.build());
+			defaultContext.add(createContext(key, contextFile));
 		});
+		defaultContext.forEach((ctx) -> FileProcessorContextFactory.getDefault().addProviderContext(ctx));
+
+		info("Assigning server ip address... Address: " + ConnectiveConfiguration.getInstance().httpIp);
+		Memory.getInstance().getOrCreate("connective.http.props.ip")
+				.assign(InetAddress.getByName(ConnectiveConfiguration.getInstance().httpIp));
 
 		info("Assigning server port... Port: " + ConnectiveConfiguration.getInstance().httpPort);
 		Memory.getInstance().getOrCreate("connective.http.props.port")
 				.assign(ConnectiveConfiguration.getInstance().httpPort);
 
+		//
+		// Load hosts
+		info("Loading alternate hosts...");
+		HostConfiguration.getInstance().readAll();
+		HostConfiguration.getInstance().hosts.forEach((name, config) -> {
+			info("Creating server " + name + "...");
+			ConnectiveServerFactory factory = new ConnectiveServerFactory();
+
+			Class<? extends ConnectiveHTTPServer> impl = null;
+			if (config.implementation.startsWith("class:")) {
+				try {
+					impl = (Class<? extends ConnectiveHTTPServer>) Class
+							.forName(config.implementation.substring("class:".length()));
+				} catch (ClassNotFoundException e) {
+					throw new RuntimeException(e);
+				}
+			} else if (config.implementation.startsWith("module:")) {
+				Class<?>[] modules = ConnectiveStandalone.impl.getComponentClasses();
+				Class<?> mod = null;
+
+				String id = config.implementation.substring("module:".length());
+				if (id.contains(".")) {
+					for (Class<?> cls : modules) {
+						if (cls.getTypeName().equals(id)) {
+							mod = cls;
+							break;
+						}
+					}
+				} else {
+					for (Class<?> cls : modules) {
+						if (cls.getSimpleName().equals(id)) {
+							mod = cls;
+							break;
+						}
+					}
+				}
+
+				if (mod == null)
+					throw new RuntimeException("Cannot find module: " + id);
+
+				String modulePkg = mod.getPackageName();
+				for (Class<ConnectiveHTTPServer> server : findClasses(ConnectiveHTTPServer.class)) {
+					if (server.getTypeName().toLowerCase().contains("internal"))
+						continue;
+
+					String pkg = server.getPackageName();
+					if (pkg.equals(modulePkg) || pkg.startsWith(modulePkg + ".")) {
+						impl = server;
+						break;
+					}
+				}
+
+				if (impl == null) {
+					throw new RuntimeException("Module does not contain any server implementations!");
+				}
+			}
+
+			if (config.implementation.equals("vanilla"))
+				factory.setOption(ConnectiveServerFactory.OPTION_DISABLE_MODULE_IMPLEMENTATIONS);
+			else if (impl != null)
+				factory.setImplementation(impl);
+			else
+				throw new RuntimeException("Invalid server implementation: " + config.implementation);
+
+			info("Creating server: " + name + "\nServer settings:\n - IP: " + config.ip + "\n - Port: " + config.port
+					+ "\n - Context Domain: " + config.contextDomain + "\n - Server implementation: "
+					+ (impl != null ? impl.getSimpleName() : "ConnectiveHTTP") + "\n");
+
+			info("Loading server context...");
+			ArrayList<ProviderContext> context = new ArrayList<ProviderContext>();
+
+			if (config.contextDomain.equals("default")) {
+				context = defaultContext;
+			} else {
+				File contextDir = new File(config.contextDomain + ".ctdn");
+				if (!contextDir.exists()) {
+					String contextFileContent = "virtualroot \"" + name + "\"" + System.lineSeparator();
+					contextDir.mkdirs();
+					File def = new File(contextDir, name + ".ctxf");
+					try {
+						Files.writeString(def.toPath(), contextFileContent);
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+
+					context.add(createContext(name, contextFileContent));
+				} else {
+					for (File contextFile : contextDir
+							.listFiles((file) -> !file.isDirectory() && file.getName().endsWith(".ctxf"))) {
+						String contextFileContent;
+						try {
+							contextFileContent = Files.readString(contextFile.toPath());
+						} catch (IOException e) {
+							throw new RuntimeException(e);
+						}
+
+						String cname = contextFile.getName().substring(0, contextFile.getName().lastIndexOf(".ctxf"));
+						context.add(createContext(cname, contextFileContent));
+					}
+				}
+			}
+
+			factory.setOption(ConnectiveServerFactory.OPTION_ASSIGN_PORT);
+			factory.setOption(ConnectiveServerFactory.OPTION_ASSIGN_IP);
+			factory.setOption(ConnectiveServerFactory.OPTION_AUTOSTART);
+			factory.setPort(config.port);
+			try {
+				factory.setIp(InetAddress.getByName(config.ip));
+			} catch (UnknownHostException e1) {
+				throw new RuntimeException(e1);
+			}
+			try {
+				ConnectiveHTTPServer srv = factory.build();
+				FileProcessorContextFactory ctxFactory = new FileProcessorContextFactory();
+				context.forEach((ctx) -> ctxFactory.addProviderContext(ctx));
+				ctxFactory.build().apply(srv);
+			} catch (InvocationTargetException e) {
+				throw new RuntimeException(e);
+			}
+		});
+
+		//
+		// Register exec call
 		Memory.getInstance().getOrCreate("bootstrap.exec.call").append(new Runnable() {
 
 			@Override
@@ -559,7 +651,6 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 
 					info("Registering processor: " + line);
 					try {
-						@SuppressWarnings("unchecked")
 						Class<? extends HttpGetProcessor> cls = (Class<? extends HttpGetProcessor>) moduleLoader
 								.loadClass(line);
 
@@ -579,6 +670,75 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 			}
 
 		});
+	}
+
+	public static ProviderContext createContext(String name, String contextFile) {
+		info("Creating context: " + name + "...");
+
+		ProviderContextFactory context = new ProviderContextFactory();
+		context.setExecLocation(name);
+		if (!name.startsWith("/")) {
+			name = (System.getProperty("rats.config.dir") == null ? "." : System.getProperty("rats.config.dir")) + "/"
+					+ name;
+		}
+		if (!new File(name).exists()) {
+			new File(name).mkdirs();
+		}
+
+		for (String line : contextFile.replaceAll("\r", "").split("\n")) {
+			if (line.isBlank() || line.startsWith("#"))
+				continue;
+
+			execContextFileInstruction(line, context);
+		}
+
+		return context.build();
+	}
+
+	public static void execContextFileInstruction(String command, ProviderContextFactory context) {
+		ArrayList<String> arguments = parseCommand(command);
+		if (arguments.size() != 0) {
+			String cmd = arguments.get(0);
+			arguments.remove(0);
+
+			boolean found = false;
+			if (instructions == null) {
+				instructions = new ArrayList<ContextFileInstruction>();
+				for (Class<ContextFileInstruction> instr : findClasses(ContextFileInstruction.class)) {
+					try {
+						Constructor<ContextFileInstruction> ctor = instr.getDeclaredConstructor();
+						ctor.setAccessible(true);
+						ContextFileInstruction ins = ctor.newInstance();
+						instructions.add(ins);
+					} catch (Exception e) {
+						error("Context instruction failed to register: " + instr.getTypeName(), e);
+					}
+				}
+			}
+
+			ContextFileInstruction instruction = null;
+			for (ContextFileInstruction instr : instructions) {
+				if (instr.instructionName().equals(cmd)) {
+					found = true;
+					instruction = instr;
+					break;
+				}
+			}
+			if (!found) {
+				warn("Failed to execute context instruction as it was not found. Instruction: " + cmd);
+			} else {
+				if (arguments.size() < instruction.minimalArguments() || (instruction.maximalArguments() != -1
+						&& arguments.size() > instruction.maximalArguments())) {
+					error("Invalid arguments for instruction '" + command + "'");
+				} else {
+					try {
+						instruction.run(arguments.toArray(t -> new String[t]), context);
+					} catch (Exception e) {
+						error("Failed to run instruction: " + cmd, e);
+					}
+				}
+			}
+		}
 	}
 
 	protected static ArrayList<String> parseCommand(String args) {
