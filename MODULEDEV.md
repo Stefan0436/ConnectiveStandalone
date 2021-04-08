@@ -2,15 +2,23 @@
 This page explains the DOs and DON'Ts for module development.<br/>
 <br/>
 <b>Note:</b> To make this easier, we have a preset project ready in the examplemodule folder.<br/>
-To use it, copy the folder and run the following LINUX commands:
+To use it, copy the folder and run the following commands:
 
-```
+### For linux:
+
+```bash
 chmod +x gradlew createlocalserver.sh
 ./createlocalserver.sh
 ```
 
+### For windows:
+
+```batch
+createlocalserver.bat
+```
+
 After which, modify `settings.gradle` and `build.gradle` to use your project names and group.<br/>
-Then run `./gradlew createEclipseLaunches readme` to create the eclipse files and README.md.
+Then run `./gradlew createEclipseLaunches readme` (gradlew.bat on windows) to create the eclipse files and README.md.
 
 ## Understanding the loading chain
 <b>Please note that the following applies to ConnectiveHTTP, the RaTs! chain differs slightly.</b><br />
