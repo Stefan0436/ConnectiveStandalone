@@ -58,4 +58,7 @@ public class ConnectiveConfiguration extends ModuleBasedConfiguration<Connective
 
 	@Comment("Normal get/post processors, specify module classes here.")
 	public String processors = "\n";
+	
+	@Comment("Rewrite tasks for the rewrite contextfile instruction")
+	public HashMap<String, String> tasks = new HashMap<String, String>();
 }

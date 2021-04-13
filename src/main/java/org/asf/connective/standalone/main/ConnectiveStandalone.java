@@ -31,6 +31,7 @@ import org.asf.connective.standalone.main.impl.ExtensionInstruction;
 import org.asf.connective.standalone.main.impl.IndexPageInstruction;
 import org.asf.connective.standalone.main.impl.UploadHandlerInstruction;
 import org.asf.connective.standalone.main.impl.RestrictionInstruction;
+import org.asf.connective.standalone.main.impl.RewriteInstruction;
 import org.asf.connective.standalone.main.impl.VirtualFileInstruction;
 import org.asf.connective.standalone.main.impl.VirtualRootInstruction;
 import org.asf.connective.standalone.main.impl.internal.AerialWorksMavenProvider;
@@ -74,7 +75,7 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 			BasicFileModule.class, VirtualRootInstruction.class, DefaultIndexPageInstruction.class,
 			IndexPageInstruction.class, RestrictionInstruction.class, ExtensionInstruction.class,
 			AliasInstruction.class, UploadHandlerInstruction.class, VirtualFileInstruction.class,
-			AerialWorksMavenProvider.class, MavenCentralRepositoryProvider.class };
+			AerialWorksMavenProvider.class, MavenCentralRepositoryProvider.class, RewriteInstruction.class };
 
 	private static FluidClassPool modulePool = FluidClassPool.createEmpty();
 	private static ArrayList<ContextFileInstruction> instructions;
@@ -741,7 +742,7 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 		}
 	}
 
-	protected static ArrayList<String> parseCommand(String args) {
+	public static ArrayList<String> parseCommand(String args) {
 		ArrayList<String> args3 = new ArrayList<String>();
 		char[] argarray = args.toCharArray();
 		boolean ignorespaces = false;
