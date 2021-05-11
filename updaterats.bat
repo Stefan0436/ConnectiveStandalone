@@ -1,5 +1,5 @@
 @echo off
-if not defined git set git="https://aerialworks.ddns.net/ASF/RATS.git"
+set git="https://aerialworks.ddns.net/ASF/RATS.git"
 set dir="%cd%"
 
 echo Updating RaTs! installation for libraries...
@@ -18,7 +18,7 @@ echo Building...
 goto execute
 
 :execute
-cmd /c gradlew.bat installation
+cmd /c java -cp gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain installation
 
 if NOT EXIST %dir%\libraries mkdir %dir%\libraries
 for /R build\Installations %%f in (*.jar) do copy /Y %%f %dir%\libraries >NUL

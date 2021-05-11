@@ -1,5 +1,5 @@
 @echo off
-if not defined git set git="https://aerialworks.ddns.net/ASF/ConnectiveStandalone.git"
+set git="https://aerialworks.ddns.net/ASF/ConnectiveStandalone.git"
 set dir="%cd%"
 
 echo Updating standalone installation for testing...
@@ -16,7 +16,7 @@ echo Building...
 goto execute
 
 :execute
-cmd /c gradlew.bat installation
+cmd /c java -cp gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain installation
 
 if NOT EXIST %dir%\server mkdir %dir%\server
 
