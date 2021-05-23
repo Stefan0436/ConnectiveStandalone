@@ -6,7 +6,7 @@ public class MavenCentralRepositoryProvider implements IMavenRepositoryProvider 
 
 	@Override
 	public String serverBaseURL() {
-		return "https://repo1.maven.org/maven2/";		
+		return "https://repo1.maven.org/maven2";
 	}
 
 }
