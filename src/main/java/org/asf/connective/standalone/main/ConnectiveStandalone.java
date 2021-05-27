@@ -97,10 +97,19 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 	/**
 	 * Main init method, called by java
 	 * 
-	 * @throws IOException           If loading fails
-	 * @throws IllegalStateException If loading fails
+	 * @throws IOException               If loading fails
+	 * @throws IllegalStateException     If loading fails
+	 * @throws ClassNotFoundException    If loading fails
+	 * @throws SecurityException         If loading fails
+	 * @throws NoSuchMethodException     If loading fails
+	 * @throws InvocationTargetException If loading fails
+	 * @throws IllegalArgumentException  If loading fails
+	 * @throws IllegalAccessException    If loading fails
+	 * @throws InstantiationException    If loading fails
 	 */
-	public static void main(String[] args) throws IllegalStateException, IOException {
+	public static void main(String[] args) throws IllegalStateException, IOException, InstantiationException,
+			IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException,
+			SecurityException, ClassNotFoundException {
 		if (new File("logs").exists())
 			deleteDir(new File("logs"));
 
