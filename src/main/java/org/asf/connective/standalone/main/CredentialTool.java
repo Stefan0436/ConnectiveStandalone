@@ -249,7 +249,7 @@ public class CredentialTool {
 		System.err.println(
 				"----------------------------------------------------------------------------------------------------");
 		System.err.println("Copyright(c) 2021 AerialWorks Software Foundation.");
-		System.err.println("Most of the Connective server is LGPL 3 licensed.");
+		System.err.println("Most of the Connective server is licensed LGPL 3.");
 		System.exit(1);
 	}
 
