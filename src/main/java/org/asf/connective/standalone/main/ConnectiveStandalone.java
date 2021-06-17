@@ -640,6 +640,27 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 			}
 			try {
 				ConnectiveHTTPServer srv = factory.build();
+				info("Loading processors from configuration...");
+				for (String line : ConnectiveConfiguration.getInstance().processors.replaceAll("\r", "").split("\n")) {
+					if (line.isEmpty() || line.startsWith("#"))
+						continue;
+
+					info("Registering processor: " + line);
+					try {
+						Class<? extends HttpGetProcessor> cls = (Class<? extends HttpGetProcessor>) moduleLoader
+								.loadClass(line);
+
+						HttpGetProcessor proc = cls.getConstructor().newInstance();
+						if (proc instanceof HttpUploadProcessor) {
+							srv.registerProcessor((HttpUploadProcessor) proc);
+						} else {
+							srv.registerProcessor(proc);
+						}
+					} catch (Exception e) {
+						error("Could not register processor " + line, e);
+					}
+				}
+				
 				FileProcessorContextFactory ctxFactory = new FileProcessorContextFactory();
 				context.forEach((ctx) -> ctxFactory.addProviderContext(ctx));
 				ctxFactory.build().apply(srv);
