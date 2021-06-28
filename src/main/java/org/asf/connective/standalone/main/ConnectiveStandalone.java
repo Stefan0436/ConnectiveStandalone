@@ -70,6 +70,7 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 	private static boolean init = false;
 	private static ConnectiveStandalone impl;
 
+	private static ArrayList<ConnectiveHTTPServer> servers = new ArrayList<ConnectiveHTTPServer>();
 	private static URLClassLoader moduleLoader = null;
 	private static Class<?>[] defaultClasses = new Class[] { ConnectiveStandalone.class, ConnectiveHTTPServer.class,
 			BasicFileModule.class, VirtualRootInstruction.class, DefaultIndexPageInstruction.class,
@@ -142,6 +143,11 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 
 		info("Stopping...");
 		impl.close();
+		ConnectiveHTTPServer.getMainServer().stop();
+		servers.forEach(server -> {
+			server.stop();
+		});
+		servers.clear();
 	}
 
 	/**
@@ -660,10 +666,11 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 						error("Could not register processor " + line, e);
 					}
 				}
-				
+
 				FileProcessorContextFactory ctxFactory = new FileProcessorContextFactory();
 				context.forEach((ctx) -> ctxFactory.addProviderContext(ctx));
 				ctxFactory.build().apply(srv);
+				servers.add(srv);
 			} catch (InvocationTargetException e) {
 				throw new RuntimeException(e);
 			}
@@ -691,6 +698,13 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 						} else {
 							ConnectiveHTTPServer.getMainServer().registerProcessor(proc);
 						}
+						servers.forEach(t -> {
+							if (proc instanceof HttpUploadProcessor) {
+								t.registerProcessor((HttpUploadProcessor) proc);
+							} else {
+								t.registerProcessor(proc);
+							}
+						});
 					} catch (Exception e) {
 						error("Could not register processor " + line, e);
 					}
