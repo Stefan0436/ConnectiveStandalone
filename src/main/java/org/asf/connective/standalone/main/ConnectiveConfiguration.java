@@ -3,6 +3,7 @@ package org.asf.connective.standalone.main;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.asf.cyan.api.config.Configuration;
 import org.asf.cyan.api.config.annotations.Comment;
 import org.asf.rats.ModuleBasedConfiguration;
 
@@ -30,6 +31,10 @@ public class ConnectiveConfiguration extends ModuleBasedConfiguration<Connective
 			instance = new ConnectiveConfiguration(baseDir);
 		}
 		return instance;
+	}
+	
+	public ConnectiveConfiguration() {
+		this(Configuration.baseDir);
 	}
 
 	public ConnectiveConfiguration(String base) {
