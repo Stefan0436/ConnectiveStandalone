@@ -21,9 +21,9 @@ repositories {
 jar {
 	manifest {
 		attributes([
-			"Specification-Title": "1.0.0.A4", // ConnectiveHTTP specification
+			"Specification-Title": "ConnectiveHTTP",
 			"Specification-Vendor": "${authorname}",
-			"Specification-Version": project.version,
+			"Specification-Version": "1.0.0.A4", // ConnectiveHTTP specification
 			"Implementation-Title": project.name,
 			"Implementation-Version": project.version,
 			"Implementation-Vendor" :"${authorname}",
