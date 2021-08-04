@@ -58,7 +58,21 @@ public class AliasInstruction implements ContextFileInstruction {
 
 		@Override
 		public String rewrite(HttpRequest request, String input) {
-			return arguments[1];
+			String target = arguments[1];
+			if (input.endsWith("/"))
+				input = input.substring(0, input.length() - 1);
+
+			target = target.replace("%input%", input);
+			target = target.replace("%request.http.version%", request.version);
+			target = target.replace("%request.http.method%", request.method);
+			target = target.replace("%request.http.query%", (request.query != null ? request.query : ""));
+			target = target.replace("%request.http.path%", request.path);
+
+			for (String header : request.headers.keySet()) {
+				target = target.replace("%request.headers." + header.toLowerCase() + "%", request.headers.get(header));
+			}
+
+			return target;
 		}
 
 		@Override

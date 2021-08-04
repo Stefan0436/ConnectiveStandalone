@@ -237,7 +237,7 @@ public class RewriteInstruction implements ContextFileInstruction {
 			String task = arguments[1].substring(5);
 			factory.addVirtualFile(new RewriteVirtualFile(arguments, task, arguments[0]));
 		} else {
-			throw new IOException("Invalid rewrite instriction! Expected: '<matcher-string>' 'task:<task>' '<regex>'");
+			throw new IOException("Invalid rewrite instruction! Expected: '<matcher-string>' 'task:<task>' '<regex>'");
 		}
 	}
 
