@@ -83,7 +83,7 @@ public class UploadHandlerInstruction implements ContextFileInstruction {
 								.authenticate(group, username, password.toCharArray())) {
 							password = null;
 
-							File file = new File(new File(serverDir, context.getSourceDirectory()), path);
+							File file = new File(context.getSourceDirectory(), path);
 							boolean existed = file.exists();
 							if (!file.getParentFile().exists()) {
 								file.getParentFile().mkdirs();
