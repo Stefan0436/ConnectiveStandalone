@@ -33,6 +33,7 @@ import org.asf.connective.standalone.main.impl.IndexPageInstruction;
 import org.asf.connective.standalone.main.impl.UploadHandlerInstruction;
 import org.asf.connective.standalone.main.impl.RestrictionInstruction;
 import org.asf.connective.standalone.main.impl.RewriteInstruction;
+import org.asf.connective.standalone.main.impl.SetHeaderInstruction;
 import org.asf.connective.standalone.main.impl.VirtualFileInstruction;
 import org.asf.connective.standalone.main.impl.VirtualRootInstruction;
 import org.asf.connective.standalone.main.impl.internal.AerialWorksMavenProvider;
@@ -78,7 +79,7 @@ public class ConnectiveStandalone extends ConnectiveHTTPServer implements Closea
 			IndexPageInstruction.class, RestrictionInstruction.class, ExtensionInstruction.class,
 			AliasInstruction.class, UploadHandlerInstruction.class, VirtualFileInstruction.class,
 			AerialWorksMavenProvider.class, MavenCentralRepositoryProvider.class, RewriteInstruction.class,
-			DocPostProcessorInstruction.class };
+			DocPostProcessorInstruction.class, SetHeaderInstruction.class };
 
 	private static FluidClassPool modulePool = FluidClassPool.createEmpty();
 	private static ArrayList<ContextFileInstruction> instructions;

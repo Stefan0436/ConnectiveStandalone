@@ -34,9 +34,6 @@ public class UploadHandlerInstruction implements ContextFileInstruction {
 		private String group = "";
 		private Logger logger = LogManager.getLogger("UPLOAD-PROCESSING");
 
-		private String serverDir = System.getProperty("rats.config.dir") == null ? "."
-				: System.getProperty("rats.config.dir");
-
 		public DefaultUploadHandler(String group, String path, ProviderContext context) {
 			this.group = group;
 

@@ -1,6 +1,6 @@
 package org.asf.connective.standalone.main;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.asf.cyan.api.config.Configuration;
@@ -59,11 +59,11 @@ public class ConnectiveConfiguration extends ModuleBasedConfiguration<Connective
 
 	@Comment("HTTP Context Configuration")
 	@Comment("Format: context-root> 'contextfile'")
-	public HashMap<String, String> context = new HashMap<String, String>(Map.of("root", "\n\nvirtualroot \"/\"\n\n"));
+	public LinkedHashMap<String, String> context = new LinkedHashMap<String, String>(Map.of("root", "\n\nvirtualroot \"/\"\n\n"));
 
 	@Comment("Normal get/post processors, specify module classes here.")
 	public String processors = "\n";
 	
 	@Comment("Rewrite tasks for the rewrite contextfile instruction")
-	public HashMap<String, String> tasks = new HashMap<String, String>();
+	public LinkedHashMap<String, String> tasks = new LinkedHashMap<String, String>();
 }
