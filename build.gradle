@@ -3,7 +3,7 @@ plugins {
 	id 'maven-publish'
 }
 
-version = "1.0.0.A13"
+version = "1.0.0.A14"
 group = "org.asf.connective"
 
 def authorname = "AerialWorks Software Foundation"
@@ -23,7 +23,7 @@ jar {
 		attributes([
 			"Specification-Title": "ConnectiveHTTP",
 			"Specification-Vendor": "${authorname}",
-			"Specification-Version": "1.0.0.A7", // ConnectiveHTTP specification
+			"Specification-Version": "1.0.0.A8", // ConnectiveHTTP specification
 			"Implementation-Title": project.name,
 			"Implementation-Version": project.version,
 			"Implementation-Vendor" :"${authorname}",
